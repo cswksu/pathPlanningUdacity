@@ -194,34 +194,18 @@ int main() {
           x_final=targXY[0];
           y_final=targXY[1];
 
-          MatrixXd a(3,3);
-          a(0,0)=pow(timeGoal,3);
-          a(0,1)=pow(timeGoal,4);
-          a(0,2)=pow(timeGoal,5);
-          a(1,0)=3*pow(timeGoal,2);
-          a(1,1)=4*pow(timeGoal,3);
-          a(1,2)=5*pow(timeGoal,4);
-          a(2,0)=timeGoal*6;
-          a(2,1)=12*pow(timeGoal,2);
-          a(2,2)=20*pow(timeGoal,3);
 
-          VectorXd b_x(3);
-          b_x(0) = x_final-(pos_x+v_x*timeGoal+0.5*acc_x*pow(timeGoal,2));
-          b_x(1) = x_dot_final-(v_x+acc_x*timeGoal);
-          b_x(2) = -acc_x;
-          VectorXd xSol=a.colPivHouseholderQr().solve(b_x);
-          VectorXd b_y(3);
-          b_y(0)= y_final-(pos_y+v_y*timeGoal+0.5*acc_y*pow(timeGoal,2));
-          b_y(1) = y_dot_final-(v_y+acc_y*timeGoal);
-          b_y(2) = -acc_y;
-          VectorXd ySol=a.colPivHouseholderQr().solve(b_y);
+          vector<double> trajX = JMT({pos_x,v_x,acc_x},{x_final,x_dot_final,0},timeGoal);
+          vector<double> trajY = JMT({pos_y,v_y,acc_y},{y_final,y_dot_final,0},timeGoal);
+
+          
           double t_iter=0;
           for (int i = 0; i < 50-prevPathSize; ++i) {
             t_iter=t_iter+0.02;
-            next_x_vals.push_back(pos_x+v_x*t_iter+acc_x*pow(t_iter,2)+xSol[0]*pow(t_iter,3)+xSol[1]*pow(t_iter,4)+xSol[2]*pow(t_iter,5));
-            next_y_vals.push_back(pos_y+v_y*t_iter+acc_y*pow(t_iter,2)+ySol[0]*pow(t_iter,3)+ySol[1]*pow(t_iter,4)+ySol[2]*pow(t_iter,5));
-            pos_x += v_x*t_iter+acc_x*pow(t_iter,2)+xSol[0]*pow(t_iter,3)+xSol[1]*pow(t_iter,4)+xSol[2]*pow(t_iter,5);
-            pos_y += v_y*t_iter+acc_y*pow(t_iter,2)+ySol[0]*pow(t_iter,3)+ySol[1]*pow(t_iter,4)+ySol[2]*pow(t_iter,5);
+            next_x_vals.push_back(pos_x+v_x*t_iter+acc_x*pow(t_iter,2)+trajX[3]*pow(t_iter,3)+trajX[4]*pow(t_iter,4)+trajX[5]*pow(t_iter,5));
+            next_y_vals.push_back(pos_y+v_y*t_iter+acc_y*pow(t_iter,2)+trajY[3]*pow(t_iter,3)+trajY[4]*pow(t_iter,4)+trajY[5]*pow(t_iter,5));
+            //pos_x += v_x*t_iter+acc_x*pow(t_iter,2)+trajX[3]*pow(t_iter,3)+trajX[4]*pow(t_iter,4)+trajX[5]*pow(t_iter,5);
+            //pos_y += v_y*t_iter+acc_y*pow(t_iter,2)+trajY[3]*pow(t_iter,3)+trajY[4]*pow(t_iter,4)+trajY[5]*pow(t_iter,5)
           }
 
 
