@@ -268,8 +268,8 @@ int main() {
             //pos_x += v_x*t_iter+acc_x*pow(t_iter,2)+trajX[3]*pow(t_iter,3)+trajX[4]*pow(t_iter,4)+trajX[5]*pow(t_iter,5);
             //pos_y += v_y*t_iter+acc_y*pow(t_iter,2)+trajY[3]*pow(t_iter,3)+trajY[4]*pow(t_iter,4)+trajY[5]*pow(t_iter,5)
           }
-          pos_x=next_x_vals[next_x_vals.size-1];
-          pos_y=next_y_vals[next_y_vals.size-1];
+          pos_x=next_x_vals[next_x_vals.length-1];
+          pos_y=next_y_vals[next_y_vals.length-1];
 
 
 
