@@ -233,6 +233,7 @@ int main() {
           } else {
             ref_speed=maxDistTravel*50;
           }
+          ref_speed=std::min(speed+5,ref_speed);
           double timeGoal;
           if (ref_speed-speed<0.5) {
             timeGoal=1; } else {
