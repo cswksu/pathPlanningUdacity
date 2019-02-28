@@ -245,8 +245,8 @@ int main() {
           y_final=targXY[1];
           vector<double> startX={pos_x,v_x,acc_x};
           vector<double> startY={pos_y,v_y,acc_y};
-          vector<double> endX={x_final,x_dot_final,0}
-          vector<double> endY={y_final,y_dot_final,0}
+          vector<double> endX={x_final,x_dot_final,0};
+          vector<double> endY={y_final,y_dot_final,0};
           vector<double> trajX = JMT(startX, endX, timeGoal);
           vector<double> trajY = JMT(startY, endY, timeGoal);
 
