@@ -12,6 +12,8 @@
 using nlohmann::json;
 using std::string;
 using std::vector;
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
 
 int main() {
   uWS::Hub h;
@@ -97,6 +99,131 @@ int main() {
            * TODO: define a path made up of (x,y) points that the car will visit
            *   sequentially every .02 seconds
            */
+
+          double maxDistTravel=0.42; // distance in meters to travel
+          int lane = (car_d-2.0)/4;
+          //std::cout<<lane<<std::endl;
+          int prevPathSize=previous_path_x.size();
+          double pos_x;
+          double pos_y;
+          double prev_pos_x;
+          double prev_pos_y;
+          double prev_prev_pos_x;
+          double prev_prev_pos_y;
+          double theta;
+          double acc_x;
+          double acc_y;
+          double v_x;
+          double v_y;
+          double speed;
+
+
+          for (int i =0; i < prevPathSize; ++i) {
+            next_x_vals.push_back(previous_path_x[i]);
+            next_y_vals.push_back(previous_path_y[i]);
+          }
+          
+          if (prevPathSize==0) {
+            pos_x = car_x;
+            pos_y = car_y;
+            theta=deg2rad(car_yaw);
+            acc_x=0;
+            acc_y=0;
+            v_x=0;
+            v_y=0;
+          } else {
+            pos_x = previous_path_x[prevPathSize-1];
+            pos_y = previous_path_y[prevPathSize-1];
+            prev_pos_x = previous_path_x[prevPathSize-2];
+            prev_pos_y = previous_path_y[prevPathSize-2];
+            prev_prev_pos_x=previous_path_x[prevPathSize-3];
+            prev_prev_pos_y=previous_path_y[prevPathSize-3];
+            theta = atan2(pos_y-prev_pos_y,pos_x-prev_pos_x);
+            v_x=(pos_x-prev_pos_x)/0.02;
+            v_y=(pos_y-prev_pos_y)/0.02;
+            acc_x=(pos_x-2*prev_pos_x+prev_prev_pos_x)/(0.02*0.02);
+            acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
+          }
+          speed = sqrt(v_x*v_x+v_y*v_y);
+          double car_ahead_speed=999;
+          double car_ahead_dist=999;
+          double sf_s;
+          double sf_d;
+          double sf_vx;
+          double sf_vy;
+          //double tempSpeed;
+          for (int i=0; i<sensor_fusion.size(); ++i) {
+            //std::cout<<sensor_fusion[i][0]<<std::endl;
+            sf_d=sensor_fusion[i][6];
+            if (abs(sf_d-car_d)<4) {
+              //same lane
+              sf_s=sensor_fusion[i][5];
+              if (sf_s-car_s>0) {
+                if (sf_s-car_s<car_ahead_dist) {
+                  car_ahead_dist=sf_s-car_s;
+                  sf_vx=sensor_fusion[i][3];
+                  sf_vy=sensor_fusion[i][4];
+                  car_ahead_speed=sqrt(pow(sf_vx,2)+pow(sf_vy,2));
+                }
+              }
+            }
+          }
+          double ref_speed;
+          if (car_ahead_dist<50) {
+            ref_speed=std::min(car_ahead_speed,maxDistTravel*50);
+          } else {
+            ref_speed=maxDistTravel*50;
+          }
+          double timeGoal;
+          if (ref_speed-speed<0.5) {
+            timeGoal=1; } else {
+            timeGoal=(ref_speed-speed)/3;
+          }
+          double x_final;
+          double x_dot_final;
+          double y_final;
+          double y_dot_final;
+          double targ_s=car_s+(ref_speed+speed)/2*timeGoal;
+          double targ_d=car_d;
+          vector<double> targXY = getXY(targ_s, targ_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+          vector<double> targXYplusOne = getXY(targ_s+1,targ_d,map_waypoints_s, map_waypoints_x, map_waypoints_y);
+          double dirTargX=targXYplusOne[0]-targXY[0];
+          double dirTargY=targXYplusOne[1]-targXY[1];
+          x_dot_final=dirTargX*ref_speed;
+          y_dot_final=dirTargY*ref_speed;
+          x_final=targXY[0];
+          y_final=targXY[1];
+
+          MatrixXd a(3,3);
+          a(0,0)=pow(timeGoal,3);
+          a(0,1)=pow(timeGoal,4);
+          a(0,2)=pow(timeGoal,5);
+          a(1,0)=3*pow(timeGoal,2);
+          a(1,1)=4*pow(timeGoal,3);
+          a(1,2)=5*pow(timeGoal,4);
+          a(2,0)=timeGoal*6;
+          a(2,1)=12*pow(timeGoal,2);
+          a(2,2)=20*pow(timeGoal,3);
+
+          VectorXd b_x(3);
+          b_x(0) = x_final-(pos_x+v_x*timeGoal+0.5*acc_x*pow(timeGoal,2));
+          b_x(1) = x_dot_final-(v_x+acc_x*timeGoal);
+          b_x(2) = -acc_x;
+          VectorXd xSol=a.colPivHouseholderQr().solve(b_x);
+          VectorXd b_y(3);
+          b_y(0)= y_final-(pos_y+v_y*timeGoal+0.5*acc_y*pow(timeGoal,2));
+          b_y(1) = y_dot_final-(v_y+acc_y*timeGoal);
+          b_y(2) = -acc_y;
+          VectorXd ySol=a.colPivHouseholderQr().solve(b_y);
+          double t_iter=0;
+          for (int i = 0; i < 50-prevPathSize; ++i) {
+            t_iter=t_iter+0.02;
+            next_x_vals.push_back(pos_x+v_x*t_iter+acc_x*pow(t_iter,2)+xSol[0]*pow(t_iter,3)+xSol[1]*pow(t_iter,4)+xSol[2]*pow(t_iter,5));
+            next_y_vals.push_back(pos_y+v_y*t_iter+acc_y*pow(t_iter,2)+ySol[0]*pow(t_iter,3)+ySol[1]*pow(t_iter,4)+ySol[2]*pow(t_iter,5));
+            pos_x += v_x*t_iter+acc_x*pow(t_iter,2)+xSol[0]*pow(t_iter,3)+xSol[1]*pow(t_iter,4)+xSol[2]*pow(t_iter,5);
+            pos_y += v_y*t_iter+acc_y*pow(t_iter,2)+ySol[0]*pow(t_iter,3)+ySol[1]*pow(t_iter,4)+ySol[2]*pow(t_iter,5);
+          }
+
 
 
           msgJson["next_x"] = next_x_vals;
