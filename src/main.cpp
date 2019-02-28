@@ -243,10 +243,10 @@ int main() {
           y_dot_final=dirTargY*ref_speed;
           x_final=targXY[0];
           y_final=targXY[1];
-          startX={pos_x,v_x,acc_x};
-          startY={pos_y,v_y,acc_y};
-          endX={x_final,x_dot_final,0}
-          endY={y_final,y_dot_final,0}
+          vector<double> startX={pos_x,v_x,acc_x};
+          vector<double> startY={pos_y,v_y,acc_y};
+          vector<double> endX={x_final,x_dot_final,0}
+          vector<double> endY={y_final,y_dot_final,0}
           vector<double> trajX = JMT(startX, endX, timeGoal);
           vector<double> trajY = JMT(startY, endY, timeGoal);
 
