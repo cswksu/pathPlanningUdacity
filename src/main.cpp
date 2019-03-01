@@ -279,9 +279,9 @@ int main() {
             speed=std::min(22.0,car_ahead_speed);
             pos_s+=speed*0.02;
             vector<double> nextXY = getXY(pos_s, 6.0, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-            preRegX(i)=nextXY[0];
             preRegY(i)=nextXY[1];
-            steps.row(i)<< std::pow(i,3), std::pow(i,2), i, 1;
+            //preRegY(i)=nextXY[1];
+            steps.row(i)<< std::pow(nextXY[0],3), std::pow(nextXY[0],2), nextXY[0], 1;
 
             /*next_x_vals.push_back(pos_x+v_x*t_iter+acc_x*pow(t_iter,2)+trajX[3]*pow(t_iter,3)+trajX[4]*pow(t_iter,4)+trajX[5]*pow(t_iter,5));
             next_y_vals.push_back(pos_y+v_y*t_iter+acc_y*pow(t_iter,2)+trajY[3]*pow(t_iter,3)+trajY[4]*pow(t_iter,4)+trajY[5]*pow(t_iter,5));*/
@@ -290,17 +290,17 @@ int main() {
             //pos_x += v_x*t_iter+acc_x*pow(t_iter,2)+trajX[3]*pow(t_iter,3)+trajX[4]*pow(t_iter,4)+trajX[5]*pow(t_iter,5);
             //pos_y += v_y*t_iter+acc_y*pow(t_iter,2)+trajY[3]*pow(t_iter,3)+trajY[4]*pow(t_iter,4)+trajY[5]*pow(t_iter,5)
           }
-          VectorXd xReg(50-prevPathSize);
           VectorXd yReg(50-prevPathSize);
-          xReg =steps.colPivHouseholderQr().solve(preRegX);
-          yReg = steps.colPivHouseholderQr().solve(preRegY);
-          VectorXd xHat(50-prevPathSize);
+          //VectorXd yReg(50-prevPathSize);
+          yReg =steps.colPivHouseholderQr().solve(preRegY);
+          //yReg = steps.colPivHouseholderQr().solve(preRegY);
           VectorXd yHat(50-prevPathSize);
-          xHat=steps*xReg;
+          //VectorXd yHat(50-prevPathSize);
           yHat=steps*yReg;
+          //yHat=steps*yReg;
 
           for (int i = 0; i < 50-prevPathSize; ++i) {
-            next_x_vals.push_back(xHat(i));
+            next_x_vals.push_back(steps(i,2));
             next_y_vals.push_back(yHat(i));
           }
           //pos_x=next_x_vals[next_x_vals.size()-1];
