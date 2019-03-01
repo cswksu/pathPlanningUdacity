@@ -238,7 +238,7 @@ int main() {
             }
           }
           double ref_speed=maxDistTravel*50;
-          if !(car_ahead_dist<50) {
+          if (car_ahead_dist>50) {
             car_ahead_speed=999;
           }
           
@@ -273,7 +273,7 @@ int main() {
             //  speed-=0.02*0.1;
 
             //}
-            speed=std::min(22,car_ahead_speed);
+            speed=std::min(22.0,car_ahead_speed);
             pos_s+=speed*0.02;
             vector<double> nextXY = getXY(pos_s, 6.0, map_waypoints_s, map_waypoints_x, map_waypoints_y);
             next_x_vals.push_back(nextXY[0]);
