@@ -159,7 +159,7 @@ int main() {
 
           double maxDistTravel=0.42; // distance in meters to travel
           int lane = (car_d-2.0)/4;
-          //std::cout<<lane<<std::endl;
+          
           int prevPathSize=previous_path_x.size();
           double pos_x;
           double pos_y;
@@ -237,77 +237,6 @@ int main() {
               }
             }
           }
-          double ref_speed=maxDistTravel*50;
-          if (car_ahead_dist>50) {
-            car_ahead_speed=999;
-          }
-          
-          /*double x_final;
-          double x_dot_final;
-          double y_final;
-          double y_dot_final;
-          double targ_s=car_s+(ref_speed+speed)/2*timeGoal;
-          double targ_d=car_d;
-          vector<double> targXY = getXY(targ_s, targ_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-          vector<double> targXYplusOne = getXY(targ_s+1,targ_d,map_waypoints_s, map_waypoints_x, map_waypoints_y);
-          double dirTargX=targXYplusOne[0]-targXY[0];
-          double dirTargY=targXYplusOne[1]-targXY[1];
-          x_dot_final=dirTargX*ref_speed;
-          y_dot_final=dirTargY*ref_speed;
-          x_final=targXY[0];
-          y_final=targXY[1];
-          vector<double> startX={pos_x,v_x,acc_x};
-          vector<double> startY={pos_y,v_y,acc_y};
-          vector<double> endX={x_final,x_dot_final,0};
-          vector<double> endY={y_final,y_dot_final,0};
-          vector<double> trajX = JMT(startX, endX, timeGoal);
-          vector<double> trajY = JMT(startY, endY, timeGoal);*/
-
-          double tempS;
-          double t_iter=0;
-          MatrixXd steps(50-prevPathSize,4);
-          VectorXd preRegX(50-prevPathSize);
-          VectorXd preRegY(50-prevPathSize);
-          for (int i = 0; i < 50-prevPathSize; ++i) {
-            t_iter=t_iter+0.02;
-            //if (speed - ref_speed<0.25) {
-            //  speed+=0.02*0.1;
-            //} else if (speed - ref_speed>0.25) {
-            //  speed-=0.02*0.1;
-
-            //}
-            speed=std::min(22.0,car_ahead_speed);
-            pos_s+=speed*0.02;
-            vector<double> nextXY = getXY(pos_s, 6.0, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-            preRegY(i)=nextXY[1];
-            //preRegY(i)=nextXY[1];
-            steps.row(i)<< std::pow(nextXY[0],3), std::pow(nextXY[0],2), nextXY[0], 1;
-
-            /*next_x_vals.push_back(pos_x+v_x*t_iter+acc_x*pow(t_iter,2)+trajX[3]*pow(t_iter,3)+trajX[4]*pow(t_iter,4)+trajX[5]*pow(t_iter,5));
-            next_y_vals.push_back(pos_y+v_y*t_iter+acc_y*pow(t_iter,2)+trajY[3]*pow(t_iter,3)+trajY[4]*pow(t_iter,4)+trajY[5]*pow(t_iter,5));*/
-
-
-            //pos_x += v_x*t_iter+acc_x*pow(t_iter,2)+trajX[3]*pow(t_iter,3)+trajX[4]*pow(t_iter,4)+trajX[5]*pow(t_iter,5);
-            //pos_y += v_y*t_iter+acc_y*pow(t_iter,2)+trajY[3]*pow(t_iter,3)+trajY[4]*pow(t_iter,4)+trajY[5]*pow(t_iter,5)
-          }
-          VectorXd yReg(50-prevPathSize);
-          //VectorXd yReg(50-prevPathSize);
-          yReg =steps.colPivHouseholderQr().solve(preRegY);
-          //yReg = steps.colPivHouseholderQr().solve(preRegY);
-          VectorXd yHat(50-prevPathSize);
-          //VectorXd yHat(50-prevPathSize);
-          yHat=steps*yReg;
-          //yHat=steps*yReg;
-
-          for (int i = 0; i < 50-prevPathSize; ++i) {
-            next_x_vals.push_back(steps(i,2));
-            next_y_vals.push_back(yHat(i));
-          }
-          //pos_x=next_x_vals[next_x_vals.size()-1];
-          //pos_y=next_y_vals[next_y_vals.size()-1];
-
-
-
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
 
