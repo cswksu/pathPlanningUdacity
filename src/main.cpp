@@ -237,11 +237,11 @@ int main() {
             }
           }
           double ref_speed;
-          if (car_ahead_dist<50) {
-            ref_speed=std::min(car_ahead_speed,maxDistTravel*50);
-          } else {
+          //if (car_ahead_dist<50) {
+          //  ref_speed=std::min(car_ahead_speed,maxDistTravel*50);
+          //} else {
             ref_speed=maxDistTravel*50;
-          }
+          //}
           
           /*double x_final;
           double x_dot_final;
