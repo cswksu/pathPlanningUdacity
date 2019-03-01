@@ -188,6 +188,9 @@ int main() {
             pos_x = car_x;
             pos_y = car_y;
             theta=deg2rad(car_yaw);
+            vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
+            pos_s=frenetPos[0];
+            pos_d=frenetPos[1];
             acc_x=0;
             acc_y=0;
             v_x=0;
