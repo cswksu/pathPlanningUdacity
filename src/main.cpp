@@ -269,9 +269,9 @@ int main() {
           for (int i = 0; i < 50-prevPathSize; ++i) {
             t_iter=t_iter+0.02;
             if (speed - ref_speed<0.25) {
-              speed+=0.02*1;
+              speed+=0.02*0.1;
             } else if (speed - ref_speed>0.25) {
-              speed-=0.02*1;
+              speed-=0.02*0.1;
 
             }
             double tempS=pos_s+speed*0.02;
