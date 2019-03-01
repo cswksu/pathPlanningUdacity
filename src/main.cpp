@@ -176,8 +176,6 @@ int main() {
           double v_y;
           double speed;
           double acc;
-          vector<double> preRegX;
-          vector<double> preRegY;
 
 
 
@@ -268,6 +266,8 @@ int main() {
           double tempS;
           double t_iter=0;
           MatrixXd steps(50-prevPathSize,4);
+          VectorXd preRegX(50-prevPathSize);
+          VectorXd preRegY(50-prevPathSize);
           for (int i = 0; i < 50-prevPathSize; ++i) {
             t_iter=t_iter+0.02;
             //if (speed - ref_speed<0.25) {
