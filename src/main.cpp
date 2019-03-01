@@ -274,7 +274,7 @@ int main() {
 
             }
             pos_s+=speed*0.02;
-            vector<double> nextXY = getXY(tempS, pos_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            vector<double> nextXY = getXY(pos_s, pos_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
             next_x_vals.push_back(nextXY[0]);
             next_y_vals.push_back(nextXY[1]);
 
