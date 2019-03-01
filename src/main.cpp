@@ -267,12 +267,13 @@ int main() {
           double t_iter=0;
           for (int i = 0; i < 50-prevPathSize; ++i) {
             t_iter=t_iter+0.02;
-            if (speed - ref_speed<0.25) {
-              speed+=0.02*0.1;
-            } else if (speed - ref_speed>0.25) {
-              speed-=0.02*0.1;
+            //if (speed - ref_speed<0.25) {
+            //  speed+=0.02*0.1;
+            //} else if (speed - ref_speed>0.25) {
+            //  speed-=0.02*0.1;
 
-            }
+            //}
+            speed=25;
             pos_s+=speed*0.02;
             vector<double> nextXY = getXY(pos_s, pos_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
             next_x_vals.push_back(nextXY[0]);
