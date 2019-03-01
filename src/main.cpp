@@ -294,10 +294,14 @@ int main() {
           VectorXd yReg(50-prevPathSize);
           xReg =steps.colPivHouseholderQr().solve(preRegX);
           yReg = steps.colPivHouseholderQr().solve(preRegY);
+          VectorXd xHat(50-prevPathSize);
+          VectorXd yHat(50-prevPathSize);
+          xHat=steps*xReg;
+          yHat=steps*yReg;
 
           for (int i = 0; i < 50-prevPathSize; ++i) {
-            next_x_vals.push_back(xReg[i]);
-            next_y_vals.push_back(yReg[i]);
+            next_x_vals.push_back(xHat(i));
+            next_y_vals.push_back(yHat(i));
           }
           //pos_x=next_x_vals[next_x_vals.size()-1];
           //pos_y=next_y_vals[next_y_vals.size()-1];
