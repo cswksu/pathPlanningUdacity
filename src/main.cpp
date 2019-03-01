@@ -219,8 +219,8 @@ int main() {
           double sf_d;
           double sf_vx;
           double sf_vy;
-          //double tempSpeed;
-          /*
+          double tempSpeed;
+          
           for (int i=0; i<sensor_fusion.size(); ++i) {
             //std::cout<<sensor_fusion[i][0]<<std::endl;
             sf_d=sensor_fusion[i][6];
@@ -236,11 +236,11 @@ int main() {
                 }
               }
             }
-          }*/
+          }
           double ref_speed=maxDistTravel*50;
-          //if (car_ahead_dist<50) {
-          //  ref_speed=std::min(car_ahead_speed,maxDistTravel*50);
-          //}
+          if !(car_ahead_dist<50) {
+            car_ahead_speed=999;
+          }
           
           /*double x_final;
           double x_dot_final;
@@ -273,9 +273,9 @@ int main() {
             //  speed-=0.02*0.1;
 
             //}
-            speed=22;
+            speed=std::min(22,car_ahead_speed);
             pos_s+=speed*0.02;
-            vector<double> nextXY = getXY(pos_s, 10.0, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            vector<double> nextXY = getXY(pos_s, 6.0, map_waypoints_s, map_waypoints_x, map_waypoints_y);
             next_x_vals.push_back(nextXY[0]);
             next_y_vals.push_back(nextXY[1]);
 
