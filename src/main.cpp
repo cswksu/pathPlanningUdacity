@@ -163,6 +163,8 @@ int main() {
           int prevPathSize=previous_path_x.size();
           double pos_x;
           double pos_y;
+          double pos_s;
+          double pos_d;
           double prev_pos_x;
           double prev_pos_y;
           double prev_prev_pos_x;
@@ -173,7 +175,7 @@ int main() {
           double v_x;
           double v_y;
           double speed;
-          
+          double acc;
 
 
 
@@ -193,17 +195,21 @@ int main() {
           } else {
             pos_x = previous_path_x[prevPathSize-1];
             pos_y = previous_path_y[prevPathSize-1];
+            theta = atan2(pos_y-prev_pos_y,pos_x-prev_pos_x);
+            vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
+            pos_s=frenetPos[0];
+            pos_d=frenetPos[1];
             prev_pos_x = previous_path_x[prevPathSize-2];
             prev_pos_y = previous_path_y[prevPathSize-2];
             prev_prev_pos_x=previous_path_x[prevPathSize-3];
             prev_prev_pos_y=previous_path_y[prevPathSize-3];
-            theta = atan2(pos_y-prev_pos_y,pos_x-prev_pos_x);
             v_x=(pos_x-prev_pos_x)/0.02;
             v_y=(pos_y-prev_pos_y)/0.02;
             acc_x=(pos_x-2*prev_pos_x+prev_prev_pos_x)/(0.02*0.02);
             acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
           }
           speed = sqrt(v_x*v_x+v_y*v_y);
+          acc = sqrt(acc_x*acc_x+acc_y*acc_y);
           double car_ahead_speed=999;
           double car_ahead_dist=999;
           double sf_s;
@@ -233,13 +239,8 @@ int main() {
           } else {
             ref_speed=maxDistTravel*50;
           }
-          ref_speed=std::min(speed+5,ref_speed);
-          double timeGoal;
-          if (ref_speed-speed<0.5) {
-            timeGoal=1; } else {
-            timeGoal=(ref_speed-speed)/3;
-          }
-          double x_final;
+          
+          /*double x_final;
           double x_dot_final;
           double y_final;
           double y_dot_final;
@@ -258,19 +259,33 @@ int main() {
           vector<double> endX={x_final,x_dot_final,0};
           vector<double> endY={y_final,y_dot_final,0};
           vector<double> trajX = JMT(startX, endX, timeGoal);
-          vector<double> trajY = JMT(startY, endY, timeGoal);
+          vector<double> trajY = JMT(startY, endY, timeGoal);*/
 
-          
+          double tempS;
           double t_iter=0;
           for (int i = 0; i < 50-prevPathSize; ++i) {
             t_iter=t_iter+0.02;
-            next_x_vals.push_back(pos_x+v_x*t_iter+acc_x*pow(t_iter,2)+trajX[3]*pow(t_iter,3)+trajX[4]*pow(t_iter,4)+trajX[5]*pow(t_iter,5));
-            next_y_vals.push_back(pos_y+v_y*t_iter+acc_y*pow(t_iter,2)+trajY[3]*pow(t_iter,3)+trajY[4]*pow(t_iter,4)+trajY[5]*pow(t_iter,5));
+            if (speed - ref_speed<0.25) {
+              speed+=0.02*1;
+            } else if (speed - ref_speed>0.25) {
+              speed-=0.02*1;
+
+            }
+            double tempS=pos_s+speed*0.02;
+            vector<double> nextXY = getXY(tempS, pos_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            next_x_vals.push_back(nextXY[0]);
+            next_y_vals.push_back(nextXY[1]);
+
+
+            /*next_x_vals.push_back(pos_x+v_x*t_iter+acc_x*pow(t_iter,2)+trajX[3]*pow(t_iter,3)+trajX[4]*pow(t_iter,4)+trajX[5]*pow(t_iter,5));
+            next_y_vals.push_back(pos_y+v_y*t_iter+acc_y*pow(t_iter,2)+trajY[3]*pow(t_iter,3)+trajY[4]*pow(t_iter,4)+trajY[5]*pow(t_iter,5));*/
+
+
             //pos_x += v_x*t_iter+acc_x*pow(t_iter,2)+trajX[3]*pow(t_iter,3)+trajX[4]*pow(t_iter,4)+trajX[5]*pow(t_iter,5);
             //pos_y += v_y*t_iter+acc_y*pow(t_iter,2)+trajY[3]*pow(t_iter,3)+trajY[4]*pow(t_iter,4)+trajY[5]*pow(t_iter,5)
           }
-          pos_x=next_x_vals[next_x_vals.size()-1];
-          pos_y=next_y_vals[next_y_vals.size()-1];
+          //pos_x=next_x_vals[next_x_vals.size()-1];
+          //pos_y=next_y_vals[next_y_vals.size()-1];
 
 
 
