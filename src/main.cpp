@@ -243,7 +243,7 @@ int main() {
               speed += 5.0 * 0.02;
             }
             pos_s+=speed*0.02;
-            pos_d = lane*4.0+2.0;
+            pos_d = 2.0;
             vector<double> xyTemp= getXY(pos_s, pos_d,map_waypoints_s, map_waypoints_x, map_waypoints_y);
             pos_x=xyTemp[0];
             pos_y=xyTemp[1];
