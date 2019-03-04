@@ -250,7 +250,7 @@ int main() {
             pos_d = 2.0;
             vector<double> xyTemp= getXY(pos_s, pos_d,map_waypoints_s, map_waypoints_x, map_waypoints_y);
             double oldPos_x=pos_x;
-            double oldPox_y=pos_y;
+            double oldPos_y=pos_y;
             pos_x=xyTemp[0];
             pos_y=xyTemp[1];
             double speedCheck = sqrt(std::pow((pos_x-oldPos_x)/0.02),2)+std::pow((pos_y-oldPos_y)/0.02),2));
