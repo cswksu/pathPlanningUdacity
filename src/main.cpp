@@ -253,7 +253,7 @@ int main() {
             double oldPos_y=pos_y;
             pos_x=xyTemp[0];
             pos_y=xyTemp[1];
-            double speedCheck = sqrt(std::pow((pos_x-oldPos_x)/0.02),2)+std::pow((pos_y-oldPos_y)/0.02),2));
+            double speedCheck = sqrt(std::pow((pos_x-oldPos_x)/0.02,2)+std::pow((pos_y-oldPos_y)/0.02,2));
             if (speedCheck > max_speed) {
               double overageRatio=speedCheck/max_speed;
               pos_x=oldPos_x+(pos_x-oldPos_x)/overageRatio;
