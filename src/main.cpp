@@ -249,8 +249,16 @@ int main() {
             pos_s+=speed*0.02;
             pos_d = 2.0;
             vector<double> xyTemp= getXY(pos_s, pos_d,map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            double oldPos_x=pos_x;
+            double oldPox_y=pos_y;
             pos_x=xyTemp[0];
             pos_y=xyTemp[1];
+            double speedCheck = sqrt(std::pow((pos_x-oldPos_x)/0.02),2)+std::pow((pos_y-oldPos_y)/0.02),2));
+            if (speedCheck > max_speed) {
+              double overageRatio=speedCheck/max_speed;
+              pos_x=oldPos_x+(pos_x-oldPos_x)/overageRatio;
+              pos_y=oldPos_y+(pos_y-oldPos_y)/overageRatio;
+            }
             next_x_vals.push_back(pos_x);
             next_y_vals.push_back(pos_y);
           }
