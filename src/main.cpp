@@ -201,12 +201,12 @@ int main() {
           } else {
             pos_x = previous_path_x[prevPathSize-1];
             pos_y = previous_path_y[prevPathSize-1];
+            prev_pos_x = previous_path_x[prevPathSize-2];
+            prev_pos_y = previous_path_y[prevPathSize-2];
             theta = atan2(pos_y-prev_pos_y,pos_x-prev_pos_x);
             vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
             pos_s=frenetPos[0];
             pos_d=frenetPos[1];
-            prev_pos_x = previous_path_x[prevPathSize-2];
-            prev_pos_y = previous_path_y[prevPathSize-2];
             prev_prev_pos_x=previous_path_x[prevPathSize-3];
             prev_prev_pos_y=previous_path_y[prevPathSize-3];
             v_x=(pos_x-prev_pos_x)/0.02;
@@ -264,6 +264,22 @@ int main() {
             }
             next_x_vals.push_back(pos_x);
             next_y_vals.push_back(pos_y);
+            prev_pos_x = oldPos_x;
+            prev_pos_y = oldPos_y;
+            theta = atan2(pos_y-prev_pos_y,pos_x-prev_pos_x);
+            vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
+            pos_s=frenetPos[0];
+            pos_d=frenetPos[1];
+            v_x=(pos_x-prev_pos_x)/0.02;
+            v_y=(pos_y-prev_pos_y)/0.02;
+            if (next_x_vals.size()>2) {
+              prev_prev_pos_x=next_x_vals[next_x_vals.size()-3];
+              prev_prev_pos_y=next_y_vals[next_y_vals.size()-3];
+              acc_x=(pos_x-2*prev_pos_x+prev_prev_pos_x)/(0.02*0.02);
+              acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
+            }
+            speed = sqrt(v_x*v_x+v_y*v_y);
+            acc = sqrt(acc_x*acc_x+acc_y*acc_y);
           }
           
           
