@@ -177,6 +177,8 @@ int main() {
           double speed;
           double acc;
           double ref_speed = 50.0 * maxDistTravel;
+          double max_speed = ref_speed+0.15;
+          double min_speed = ref_speed-0.15;
 
 
 
@@ -239,8 +241,10 @@ int main() {
             }
           }
           for (int i =0; i < 50 - prevPathSize; ++i) {
-            if (speed < ref_speed) {
+            if (speed < min_speed) {
               speed += 5.0 * 0.02;
+            } else if (speed > max_speed ) {
+              speed -= 5.0 * 0.02;
             }
             pos_s+=speed*0.02;
             pos_d = 2.0;
