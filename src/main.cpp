@@ -176,6 +176,7 @@ int main() {
           double v_y;
           double speed;
           double acc;
+          double ref_speed = 50.0 * maxDistTravel;
 
 
 
@@ -237,6 +238,20 @@ int main() {
               }
             }
           }
+          for (int i =0; i < 50 - prevPathSize; ++i) {
+            if (speed < ref_speed - 0.5) {
+              speed += 5.0 * 0.02;
+            }
+            pos_s+=speed*0.02;
+            pos_d = lane*4.0+2.0;
+            vector<double> xyTemp= getXY(pos_s, pos_d,map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            pos_x=xyTemp[0];
+            pos_y=xyTemp[1];
+            next_x_vals.push_back(pos_x);
+            next_y_vals.push_back(pos_y);
+          }
+          
+          
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
 
