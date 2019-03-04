@@ -239,7 +239,7 @@ int main() {
             }
           }
           for (int i =0; i < 50 - prevPathSize; ++i) {
-            if (speed < ref_speed - 0.5) {
+            if (speed < ref_speed) {
               speed += 5.0 * 0.02;
             }
             pos_s+=speed*0.02;
