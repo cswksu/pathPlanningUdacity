@@ -250,7 +250,7 @@ int main() {
               speed -= 5.0 * 0.02;
             }
             pos_s+=speed*0.02;
-            pos_d = 2.0;
+            pos_d = 6.0;
             vector<double> xyTemp= getXY(pos_s, pos_d,map_waypoints_s, map_waypoints_x, map_waypoints_y);
             double oldPos_x=pos_x;
             double oldPos_y=pos_y;
