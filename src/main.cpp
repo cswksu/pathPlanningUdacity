@@ -282,7 +282,7 @@ int main() {
             double oldPos_x=pos_x;
             double oldPos_y=pos_y;
             pos_x=pos_x_trans*cos(-thetaRotCW)+pos_y_trans*sin(-thetaRotCW);
-            pos_y= pos_x_trans*sin(-thetaRotCW)+pos_y_trans*cos(-thetaRotCW);
+            pos_y= -pos_x_trans*sin(-thetaRotCW)+pos_y_trans*cos(-thetaRotCW);
             
             /**pos_s+=speed*0.02;
             pos_d = 6.0;
