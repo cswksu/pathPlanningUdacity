@@ -242,9 +242,9 @@ int main() {
           }
           for (int i =0; i < 50 - prevPathSize; ++i) {
             if (speed < min_speed) {
-              if ((acc < 5) && (acc<sqrt(10*(min_speed-speed))) {
+              if ((acc < 5) && (acc<sqrt(10*(min_speed-speed)))) {
                 acc += 5.0 * 0.02;
-              } else if ((acc < 5) && (acc>=sqrt(10*(min_speed-speed))) {
+              } else if ((acc < 5) && (acc>=sqrt(10*(min_speed-speed)))) {
                 acc -= 5.0 * 0.02;
               }
               speed += acc * 0.02;
