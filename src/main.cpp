@@ -250,7 +250,7 @@ int main() {
               }
             }
           }**/
-          int numSteps=25;
+          int numSteps=10;
           int projSteps=std::max(3,(50-prevPathSize)/numSteps);
           vector<double> xPath(projSteps), yPath(projSteps);
           for (int i=0; i < projSteps; ++i) {
