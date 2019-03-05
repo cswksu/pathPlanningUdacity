@@ -260,8 +260,8 @@ int main() {
             yTransPath[i]=-xPath[i]*sin(thetaRotCW)+yPath[i]*cos(thetaRotCW);
             
           }
-          pos_x_trans=xPath[0]*cos(thetaRotCW)+yPath[0]*sin(thetaRotCW);
-          pos_y_trans=-xPath[0]*sin(thetaRotCW)+yPath[0]*cos(thetaRotCW);
+          double pos_x_trans=xPath[0]*cos(thetaRotCW)+yPath[0]*sin(thetaRotCW);
+          double pos_y_trans=-xPath[0]*sin(thetaRotCW)+yPath[0]*cos(thetaRotCW);
           tk::spline s;
           s.set_points(xTransPath,yTransPath);
           for (int i =0; i < 50 - prevPathSize; ++i) {
