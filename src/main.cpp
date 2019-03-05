@@ -7,6 +7,7 @@
 #include "Eigen-3.3/Eigen/QR"
 #include "helpers.h"
 #include "json.hpp"
+#include "spline.h"
 
 // for convenience
 using nlohmann::json;
@@ -240,11 +241,23 @@ int main() {
               }
             }
           }
+          int projSteps=1+(50-prevPathSize)/10;
+          vector<double> xPath(projSteps), yPath(projSteps);
+          for (int i=0; i < projSteps; ++i) {
+            double tempS=pos_s+i*max_speed*10*0.02;
+            double tempD= 6.0;
+            vector<double> xyTemp= getXY(tempS, tempD,map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            xPath[i]=xyTemp[0];
+            yPath[i]=xyTemp[1];
+            
+          }
+          tk::spline s;
+          s.set_points(xPath,yPath);
           for (int i =0; i < 50 - prevPathSize; ++i) {
             if (speed < min_speed) {
-              if ((acc < 5) && (acc<sqrt(10*(min_speed-speed)))) {
+              if ((acc < 5.0) && (acc<sqrt(10.0*(max_speed-speed)))) {
                 acc += 5.0 * 0.02;
-              } else if ((acc < 5) && (acc>=sqrt(10*(min_speed-speed)))) {
+              } else if ((acc < 5.0) && (acc>=sqrt(10.0*(max_speed-speed)))) {
                 acc -= 5.0 * 0.02;
               }
               speed += acc * 0.02;
@@ -264,8 +277,9 @@ int main() {
               pos_x=oldPos_x+(pos_x-oldPos_x)/overageRatio;
               pos_y=oldPos_y+(pos_y-oldPos_y)/overageRatio;
             }
+            pos_y=s(pos_x)
             next_x_vals.push_back(pos_x);
-            next_y_vals.push_back(pos_y);
+            next_y_vals.push_back(pos_ySpline);
             prev_pos_x = oldPos_x;
             prev_pos_y = oldPos_y;
             theta = atan2(pos_y-prev_pos_y,pos_x-prev_pos_x);
