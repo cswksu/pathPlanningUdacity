@@ -293,13 +293,14 @@ int main() {
             double rotPos_x=pos_x*cos(thetaRotCW)+pos_y*sin(thetaRotCW);
             double rotPos_y=s(rotPos_x);
             pos_y= -rotPos_x*sin(-thetaRotCW)+rotPos_y*cos(-thetaRotCW);
-            
+            **/
             double speedCheck = sqrt(std::pow((pos_x-oldPos_x)/0.02,2)+std::pow((pos_y-oldPos_y)/0.02,2));
             if (speedCheck > max_speed) {
               double overageRatio=speedCheck/max_speed;
               pos_x=oldPos_x+(pos_x-oldPos_x)/overageRatio;
               pos_y=oldPos_y+(pos_y-oldPos_y)/overageRatio;
-            }**/
+              pos_x_trans=pos_x*cos(thetaRotCW)-pos_y*sin(thetaRotCW);
+            }
             next_x_vals.push_back(pos_x);
             next_y_vals.push_back(pos_y);
             prev_pos_x = oldPos_x;
