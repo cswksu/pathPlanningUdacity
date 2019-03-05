@@ -183,7 +183,7 @@ int main() {
           double min_speed = ref_speed-0.15;
 
 
-          prevPathSize=std::min(prevPathSize,10);
+          prevPathSize=std::min(prevPathSize,5);
           for (int i =0; i < prevPathSize; ++i) {
             next_x_vals.push_back(previous_path_x[i]);
             next_y_vals.push_back(previous_path_y[i]);
@@ -243,7 +243,7 @@ int main() {
             }
           }
           int numSteps=25;
-          int projSteps=3+(50-prevPathSize)/numSteps;
+          int projSteps=(50-prevPathSize)/numSteps;
           vector<double> xPath(projSteps), yPath(projSteps);
           for (int i=0; i < projSteps; ++i) {
             double tempS=pos_s+i*max_speed*numSteps*0.02;
