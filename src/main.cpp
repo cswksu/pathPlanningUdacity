@@ -184,7 +184,7 @@ int main() {
           double min_speed = ref_speed-0.15;
 
 
-          prevPathSize=std::min(prevPathSize,5);
+          //prevPathSize=std::min(prevPathSize,5);
           for (int i =0; i < prevPathSize; ++i) {
             next_x_vals.push_back(previous_path_x[i]);
             next_y_vals.push_back(previous_path_y[i]);
@@ -266,7 +266,7 @@ int main() {
           tk::spline s;
           s.set_points(xTransPath,yTransPath);
           for (int i =0; i < 50 - prevPathSize; ++i) {
-            /**if (speed < min_speed) {
+            if (speed < min_speed) {
               if ((acc < 5.0) && (acc<sqrt(10.0*(max_speed-speed)))) {
                 acc += 5.0 * 0.02;
               } else if ((acc < 5.0) && (acc>=sqrt(10.0*(max_speed-speed)))) {
@@ -275,8 +275,8 @@ int main() {
               speed += acc * 0.02;
             } else if (speed > max_speed ) {
               speed -= 5.0 * 0.02;
-            }**/
-            speed = 22;
+            }
+            //speed = 22;
             double transHdg=atan2(s(pos_x_trans+0.1)-pos_y_trans,0.1);
             double deltaXRot=speed*0.02*cos(transHdg);
             pos_x_trans+=deltaXRot;
