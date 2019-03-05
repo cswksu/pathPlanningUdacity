@@ -242,10 +242,11 @@ int main() {
               }
             }
           }
-          int projSteps=3+(50-prevPathSize)/10;
+          int numSteps=25;
+          int projSteps=3+(50-prevPathSize)/numSteps;
           vector<double> xPath(projSteps), yPath(projSteps);
           for (int i=0; i < projSteps; ++i) {
-            double tempS=pos_s+i*max_speed*10*0.02;
+            double tempS=pos_s+i*max_speed*numSteps*0.02;
             double tempD= 6.0;
             vector<double> xyTemp= getXY(tempS, tempD,map_waypoints_s, map_waypoints_x, map_waypoints_y);
             xPath[i]=xyTemp[0];
