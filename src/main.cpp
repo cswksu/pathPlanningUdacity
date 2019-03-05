@@ -201,6 +201,8 @@ int main() {
             v_x=0;
             v_y=0;
           } else {
+            acc=0;
+            speed=0;
             pos_x = previous_path_x[prevPathSize-1];
             pos_y = previous_path_y[prevPathSize-1];
             theta=deg2rad(car_yaw);
@@ -217,10 +219,11 @@ int main() {
                 acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
                 acc = sqrt(acc_x*acc_x+acc_y*acc_y);
               }
-              vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
-              pos_s=frenetPos[0];
-              pos_d=frenetPos[1];
+              
             }
+            vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
+            pos_s=frenetPos[0];
+            pos_d=frenetPos[1];
           }
           speed = sqrt(v_x*v_x+v_y*v_y);
           double car_ahead_speed=999;
