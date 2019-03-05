@@ -289,6 +289,10 @@ int main() {
               speed -= 5.0 * 0.02;
             }
             //speed = 22;
+            if (speed < 0) {
+              std::cout<<"negative speed"<<std::endl;
+            }
+            
             double transHdg=atan2(s(pos_x_trans+0.1)-pos_y_trans,0.1);
             double deltaXRot=speed*0.02*cos(transHdg);
             pos_x_trans+=deltaXRot;
