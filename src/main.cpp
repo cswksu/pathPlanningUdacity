@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <bits/stdc++.h> 
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
 #include "helpers.h"
@@ -246,7 +247,7 @@ int main() {
           int projSteps=std::max(3,(50-prevPathSize)/numSteps);
           vector<double> xPath(projSteps), yPath(projSteps);
           for (int i=0; i < projSteps; ++i) {
-            double tempS=pos_s+i*max_speed*numSteps*0.02;
+            double tempS=pos_s+i*(speed+5)*numSteps*0.02;
             double tempD= 6.0;
             vector<double> xyTemp= getXY(tempS, tempD,map_waypoints_s, map_waypoints_x, map_waypoints_y);
             xPath[i]=xyTemp[0];
