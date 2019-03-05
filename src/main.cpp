@@ -260,6 +260,8 @@ int main() {
             yTransPath[i]=-xPath[i]*sin(thetaRotCW)+yPath[i]*cos(thetaRotCW);
             
           }
+          pos_x_trans=xPath[0]*cos(thetaRotCW)+yPath[0]*sin(thetaRotCW);
+          pos_y_trans=-xPath[0]*sin(thetaRotCW)+yPath[0]*cos(thetaRotCW);
           tk::spline s;
           s.set_points(xTransPath,yTransPath);
           for (int i =0; i < 50 - prevPathSize; ++i) {
@@ -273,7 +275,14 @@ int main() {
             } else if (speed > max_speed ) {
               speed -= 5.0 * 0.02;
             }
-            pos_s+=speed*0.02;
+            double transHdg=(s(pos_x_trans+0.1)-pos_y_trans,0.1);
+            double detlaXRot=speed*0.02*cos(transHdg);
+            pos_x_trans+=deltaXRot;
+            pos_y_trans=s(pos_x_trans);
+            pos_x=pos_x_trans*cos(-thetaRotCW)+pos_y_trans*sin(-thetaRotCW);
+            pos_y= pos_x_trans*sin(-thetaRotCW)+pos_y_trans*cos(-thetaRotCW);
+            
+            /**pos_s+=speed*0.02;
             pos_d = 6.0;
             vector<double> xyTemp= getXY(pos_s, pos_d,map_waypoints_s, map_waypoints_x, map_waypoints_y);
             double oldPos_x=pos_x;
@@ -289,7 +298,7 @@ int main() {
               double overageRatio=speedCheck/max_speed;
               pos_x=oldPos_x+(pos_x-oldPos_x)/overageRatio;
               pos_y=oldPos_y+(pos_y-oldPos_y)/overageRatio;
-            }
+            }**/
             next_x_vals.push_back(pos_x);
             next_y_vals.push_back(pos_y);
             prev_pos_x = oldPos_x;
