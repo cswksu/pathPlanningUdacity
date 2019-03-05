@@ -300,6 +300,7 @@ int main() {
               pos_x=oldPos_x+(pos_x-oldPos_x)/overageRatio;
               pos_y=oldPos_y+(pos_y-oldPos_y)/overageRatio;
               pos_x_trans=pos_x*cos(thetaRotCW)-pos_y*sin(thetaRotCW);
+              pos_y_trans=-pos_x*sin(thetaRotCW)+pos_y*cos(thetaRotCW);
             }
             next_x_vals.push_back(pos_x);
             next_y_vals.push_back(pos_y);
