@@ -266,7 +266,12 @@ int main() {
           for (int i=0; i < projSteps; ++i) {
             xTransPath[i]=xPath[i]*cos(thetaRotCW)+yPath[i]*sin(thetaRotCW);
             yTransPath[i]=-xPath[i]*sin(thetaRotCW)+yPath[i]*cos(thetaRotCW);
-            
+            if (i > 0) {
+              if (xTransPath[i]<xTransPath[i-1]) {
+                std::cout << "non-sorted" << std::endl;
+              }
+              
+            }
           }
           double pos_x_trans=xPath[0]*cos(thetaRotCW)+yPath[0]*sin(thetaRotCW);
           double pos_y_trans=-xPath[0]*sin(thetaRotCW)+yPath[0]*cos(thetaRotCW);
