@@ -279,7 +279,7 @@ int main() {
             }
             pos_y=s(pos_x)
             next_x_vals.push_back(pos_x);
-            next_y_vals.push_back(pos_ySpline);
+            next_y_vals.push_back(pos_y);
             prev_pos_x = oldPos_x;
             prev_pos_y = oldPos_y;
             theta = atan2(pos_y-prev_pos_y,pos_x-prev_pos_x);
