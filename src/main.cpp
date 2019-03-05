@@ -279,14 +279,15 @@ int main() {
             double detlaXRot=speed*0.02*cos(transHdg);
             pos_x_trans+=deltaXRot;
             pos_y_trans=s(pos_x_trans);
+            double oldPos_x=pos_x;
+            double oldPos_y=pos_y;
             pos_x=pos_x_trans*cos(-thetaRotCW)+pos_y_trans*sin(-thetaRotCW);
             pos_y= pos_x_trans*sin(-thetaRotCW)+pos_y_trans*cos(-thetaRotCW);
             
             /**pos_s+=speed*0.02;
             pos_d = 6.0;
             vector<double> xyTemp= getXY(pos_s, pos_d,map_waypoints_s, map_waypoints_x, map_waypoints_y);
-            double oldPos_x=pos_x;
-            double oldPos_y=pos_y;
+            
             pos_x=xyTemp[0];
             pos_y=xyTemp[1];
             double rotPos_x=pos_x*cos(thetaRotCW)+pos_y*sin(thetaRotCW);
