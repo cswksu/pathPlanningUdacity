@@ -276,7 +276,7 @@ int main() {
               speed -= 5.0 * 0.02;
             }
             double transHdg=(s(pos_x_trans+0.1)-pos_y_trans,0.1);
-            double detlaXRot=speed*0.02*cos(transHdg);
+            double deltaXRot=speed*0.02*cos(transHdg);
             pos_x_trans+=deltaXRot;
             pos_y_trans=s(pos_x_trans);
             double oldPos_x=pos_x;
