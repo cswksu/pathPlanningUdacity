@@ -241,7 +241,7 @@ int main() {
               }
             }
           }
-          int projSteps=1+(50-prevPathSize)/10;
+          int projSteps=2+(50-prevPathSize)/10;
           vector<double> xPath(projSteps), yPath(projSteps);
           for (int i=0; i < projSteps; ++i) {
             double tempS=pos_s+i*max_speed*10*0.02;
