@@ -243,7 +243,7 @@ int main() {
             }
           }
           int numSteps=25;
-          int projSteps=(50-prevPathSize)/numSteps;
+          int projSteps=std::max(3,(50-prevPathSize)/numSteps);
           vector<double> xPath(projSteps), yPath(projSteps);
           for (int i=0; i < projSteps; ++i) {
             double tempS=pos_s+i*max_speed*numSteps*0.02;
