@@ -308,15 +308,18 @@ int main() {
             if (speed < 0) {
               std::cout<<"negative speed"<<std::endl;
             }
-            double tempDist=-1.0;
-            double targDist=speed*0.02;
+            double tempSpeed=-1.0;
             double allowableDiff=0.02;
             double tempX=pos_x_trans;
             double tempY;
-            while (abs(tempDist-targDist)>allowableDiff) {
-              tempX+=0.01;
+            while(abs(tempSpeed-speed)>allowableDiff) {
+              if (tempSpeed-speed>0) {
+                tempX-=0.01;
+              } else {
+                tempX+=0.01;
+              }
               tempY=s(tempX);
-              tempDist=sqrt(pow(tempX-pos_x_trans,2)+pow(tempY-pos_y_trans,2));
+              tempSpeed=sqrt(pow(tempX-pos_x_trans,2)+pow(tempY-pos_y_trans,2))/0.02;
             }
             /*
             double transHdg=atan2(s(pos_x_trans+1.0)-pos_y_trans,1.0);
