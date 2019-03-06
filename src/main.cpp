@@ -3,10 +3,12 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cmath>
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
 #include "helpers.h"
 #include "json.hpp"
+#include "spline.h"
 
 // for convenience
 using nlohmann::json;
@@ -181,9 +183,12 @@ int main() {
           double v_y;
           double speed;
           double acc;
+          double ref_speed = 50.0 * maxDistTravel;
+          double max_speed = ref_speed+0.15;
+          double min_speed = ref_speed-0.15;
 
 
-
+          prevPathSize=std::min(prevPathSize,5);
           for (int i =0; i < prevPathSize; ++i) {
             next_x_vals.push_back(previous_path_x[i]);
             next_y_vals.push_back(previous_path_y[i]);
@@ -201,23 +206,31 @@ int main() {
             v_x=0;
             v_y=0;
           } else {
+            acc=0;
+            speed=0;
             pos_x = previous_path_x[prevPathSize-1];
             pos_y = previous_path_y[prevPathSize-1];
-            prev_pos_x = previous_path_x[prevPathSize - 2];
-            prev_pos_y = previous_path_y[prevPathSize - 2];
-            theta = atan2(pos_y-prev_pos_y,pos_x-prev_pos_x);
+            theta=deg2rad(car_yaw);
+            if (prevPathSize>1) {
+              prev_pos_x = previous_path_x[prevPathSize-2];
+              prev_pos_y = previous_path_y[prevPathSize-2];
+              v_x=(pos_x-prev_pos_x)/0.02;
+              v_y=(pos_y-prev_pos_y)/0.02;
+              theta = atan2(pos_y-prev_pos_y,pos_x-prev_pos_x);
+              if (prevPathSize>2) {
+                prev_prev_pos_x=previous_path_x[prevPathSize-3];
+                prev_prev_pos_y=previous_path_y[prevPathSize-3];
+                acc_x=(pos_x-2*prev_pos_x+prev_prev_pos_x)/(0.02*0.02);
+                acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
+                acc = sqrt(acc_x*acc_x+acc_y*acc_y);
+              }
+              
+            }
             vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
             pos_s=frenetPos[0];
             pos_d=frenetPos[1];
-            prev_prev_pos_x=previous_path_x[prevPathSize-3];
-            prev_prev_pos_y=previous_path_y[prevPathSize-3];
-            v_x=(pos_x-prev_pos_x)/0.02;
-            v_y=(pos_y-prev_pos_y)/0.02;
-            acc_x=(pos_x-2*prev_pos_x+prev_prev_pos_x)/(0.02*0.02);
-            acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
           }
           speed = sqrt(v_x*v_x+v_y*v_y);
-          acc = sqrt(acc_x*acc_x+acc_y*acc_y);
           double car_ahead_speed=999;
           double car_ahead_dist=999;
           double sf_s;
@@ -226,7 +239,7 @@ int main() {
           double sf_vy;
           double tempSpeed;
           
-          for (int i=0; i<sensor_fusion.size(); ++i) {
+          /**for (int i=0; i<sensor_fusion.size(); ++i) {
             //std::cout<<sensor_fusion[i][0]<<std::endl;
             sf_d=sensor_fusion[i][6];
             if (abs(sf_d-car_d)<4) {
@@ -241,7 +254,98 @@ int main() {
                 }
               }
             }
+          }**/
+          int numSteps=10;
+          int projSteps=std::max(3,(50-prevPathSize)/numSteps);
+          vector<double> xPath(projSteps), yPath(projSteps);
+          for (int i=0; i < projSteps; ++i) {
+            double tempS=pos_s+i*(speed+5)*numSteps*0.02;
+            double tempD= 6.0;
+            vector<double> xyTemp= getXY(tempS, tempD,map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            xPath[i]=xyTemp[0];
+            yPath[i]=xyTemp[1];
+            
           }
+          double thetaRotCW=atan2(yPath[projSteps-1]-yPath[0],xPath[projSteps-1]-xPath[0]);
+          vector<double> xTransPath(projSteps), yTransPath(projSteps);
+          for (int i=0; i < projSteps; ++i) {
+            xTransPath[i]=xPath[i]*cos(thetaRotCW)+yPath[i]*sin(thetaRotCW);
+            yTransPath[i]=-xPath[i]*sin(thetaRotCW)+yPath[i]*cos(thetaRotCW);
+            if (i > 0) {
+              if (xTransPath[i]<xTransPath[i-1]) {
+                std::cout << "non-sorted" << std::endl;
+              }
+              
+            }
+          }
+          double pos_x_trans=xPath[0]*cos(thetaRotCW)+yPath[0]*sin(thetaRotCW);
+          double pos_y_trans=-xPath[0]*sin(thetaRotCW)+yPath[0]*cos(thetaRotCW);
+          tk::spline s;
+          s.set_points(xTransPath,yTransPath);
+          for (int i =0; i < 50 - prevPathSize; ++i) {
+            if (speed < min_speed) {
+              if ((acc < 5.0) && (acc<sqrt(10.0*(max_speed-speed)))) {
+                acc += 5.0 * 0.02;
+              } else if ((acc < 5.0) && (acc>=sqrt(10.0*(max_speed-speed)))) {
+                acc -= 5.0 * 0.02;
+              }
+              speed += acc * 0.02;
+            } else if (speed > max_speed ) {
+              speed -= 5.0 * 0.02;
+            }
+            //speed = 22;
+            if (speed < 0) {
+              std::cout<<"negative speed"<<std::endl;
+            }
+            
+            double transHdg=atan2(s(pos_x_trans+1.0)-pos_y_trans,1.0);
+            double deltaXRot=speed*0.02*cos(transHdg);
+            pos_x_trans+=deltaXRot;
+            pos_y_trans=s(pos_x_trans);
+            double oldPos_x=pos_x;
+            double oldPos_y=pos_y;
+            pos_x=pos_x_trans*cos(-thetaRotCW)+pos_y_trans*sin(-thetaRotCW);
+            pos_y= -pos_x_trans*sin(-thetaRotCW)+pos_y_trans*cos(-thetaRotCW);
+            
+            /**pos_s+=speed*0.02;
+            pos_d = 6.0;
+            vector<double> xyTemp= getXY(pos_s, pos_d,map_waypoints_s, map_waypoints_x, map_waypoints_y);
+            
+            pos_x=xyTemp[0];
+            pos_y=xyTemp[1];
+            double rotPos_x=pos_x*cos(thetaRotCW)+pos_y*sin(thetaRotCW);
+            double rotPos_y=s(rotPos_x);
+            pos_y= -rotPos_x*sin(-thetaRotCW)+rotPos_y*cos(-thetaRotCW);
+            **/
+            double speedCheck = sqrt(std::pow((pos_x-oldPos_x)/0.02,2)+std::pow((pos_y-oldPos_y)/0.02,2));
+            if (speedCheck > max_speed) {
+              double overageRatio=speedCheck/max_speed;
+              pos_x=oldPos_x+(pos_x-oldPos_x)/overageRatio;
+              pos_y=oldPos_y+(pos_y-oldPos_y)/overageRatio;
+              pos_x_trans=pos_x*cos(thetaRotCW)-pos_y*sin(thetaRotCW);
+              pos_y_trans=-pos_x*sin(thetaRotCW)+pos_y*cos(thetaRotCW);
+            }
+            next_x_vals.push_back(pos_x);
+            next_y_vals.push_back(pos_y);
+            prev_pos_x = oldPos_x;
+            prev_pos_y = oldPos_y;
+            theta = atan2(pos_y-prev_pos_y,pos_x-prev_pos_x);
+            vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
+            pos_s=frenetPos[0];
+            pos_d=frenetPos[1];
+            v_x=(pos_x-prev_pos_x)/0.02;
+            v_y=(pos_y-prev_pos_y)/0.02;
+            if (next_x_vals.size()>2) {
+              prev_prev_pos_x=next_x_vals[next_x_vals.size()-3];
+              prev_prev_pos_y=next_y_vals[next_y_vals.size()-3];
+              acc_x=(pos_x-2*prev_pos_x+prev_prev_pos_x)/(0.02*0.02);
+              acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
+            }
+            speed = sqrt(v_x*v_x+v_y*v_y);
+            acc = sqrt(acc_x*acc_x+acc_y*acc_y);
+          }
+          
+          
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
 
