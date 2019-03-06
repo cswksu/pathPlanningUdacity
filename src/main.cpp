@@ -323,6 +323,8 @@ int main() {
             double deltaXRot=speed*0.02*cos(transHdg);
             pos_x_trans+=deltaXRot;
             pos_y_trans=s(pos_x_trans);*/
+            pos_x_trans=tempX;
+            pos_y_trans=tempY;
             double oldPos_x=pos_x;
             double oldPos_y=pos_y;
             pos_x=pos_x_trans*cos(-thetaRotCW)+pos_y_trans*sin(-thetaRotCW);
