@@ -308,10 +308,11 @@ int main() {
             if (speed < 0) {
               std::cout<<"negative speed"<<std::endl;
             }
-            double tempSpeed=-1.0;
+            
             double allowableDiff=0.02;
-            double tempX=pos_x_trans;
-            double tempY;
+            double tempX=pos_x_trans+speed*0.02;
+            double tempY=s(tempX);
+            double tempSpeed=sqrt(pow(tempX-pos_x_trans,2)+pow(tempY-pos_y_trans,2))/0.02;
             while(abs(tempSpeed-speed)>allowableDiff) {
               if (tempSpeed-speed>0) {
                 tempX-=0.01;
