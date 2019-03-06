@@ -90,7 +90,7 @@ int main() {
   double max_s = 6945.554;
 
   std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
-
+  std::cout << "reading in lines" << std::endl;
   string line;
   while (getline(in_map_, line)) {
     std::istringstream iss(line);
@@ -109,20 +109,24 @@ int main() {
     map_waypoints_s.push_back(s);
     map_waypoints_dx.push_back(d_x);
     map_waypoints_dy.push_back(d_y);
+    std::cout << "read in a line" << std::endl;
   }
 
 #ifdef UWS_VCPKG
-  h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s, &map_waypoints_dx, &map_waypoints_dy]
+  h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
+    &map_waypoints_dx, &map_waypoints_dy]
     (uWS::WebSocket<uWS::SERVER> *ws, char *data, size_t length,
-    uWS::OpCode opCode) {
+      uWS::OpCode opCode) {
 #else
-  h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s, &map_waypoints_dx, &map_waypoints_dy]
-  (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
-    uWS::OpCode opCode) {
+  h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
+    &map_waypoints_dx, &map_waypoints_dy]
+    (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+      uWS::OpCode opCode) {
 #endif
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
+    
     if (length && length > 2 && data[0] == '4' && data[1] == '2') {
 
       auto s = hasData(data);
@@ -153,7 +157,6 @@ int main() {
           // Sensor Fusion Data, a list of all other cars on the same side 
           //   of the road.
           auto sensor_fusion = j[1]["sensor_fusion"];
-
           json msgJson;
 
           vector<double> next_x_vals;
@@ -166,7 +169,7 @@ int main() {
 
           double maxDistTravel=0.42; // distance in meters to travel
           int lane = (car_d-2.0)/4;
-          
+          std::cout << "received data" << std::endl;
           int prevPathSize=previous_path_x.size();
           double pos_x;
           double pos_y;
@@ -350,7 +353,6 @@ int main() {
           msgJson["next_y"] = next_y_vals;
 
           auto msg = "42[\"control\","+ msgJson.dump()+"]";
-
 #ifdef UWS_VCPKG
           ws->send(msg.data(), msg.length(), uWS::OpCode::TEXT);
 #else
