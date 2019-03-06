@@ -94,9 +94,6 @@ int main() {
   if (in_map_.good()) {
     std::cout << "file exists" << std::endl;
   }
-  if (in_map2_.good()) {
-    std::cout << "file 2 exists" << std::endl;
-  }
   std::cout << "reading in lines" << std::endl;
   string line;
   while (getline(in_map_, line)) {
