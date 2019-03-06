@@ -198,7 +198,7 @@ int main() {
           double min_speed = ref_speed-0.15;
 
 
-          prevPathSize=std::min(prevPathSize,25);
+          prevPathSize=std::min(prevPathSize,10);
           for (int i =0; i < prevPathSize; ++i) {
             next_x_vals.push_back(previous_path_x[i]);
             next_y_vals.push_back(previous_path_y[i]);
