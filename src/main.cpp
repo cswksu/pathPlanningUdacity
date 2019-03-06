@@ -85,16 +85,19 @@ int main() {
   //r for lane change right
 
   // Waypoint map to read from
+#ifdef UWS_VCPKG
+  string map_file_ = "./data/highway_map.csv";
+#else
   string map_file_ = "../data/highway_map.csv";
-
+#endif
   // The max s value before wrapping around the track back to 0
   double max_s = 6945.554;
 
   std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
   if (in_map_.good()) {
-    std::cout << "file exists" << std::endl;
+    //std::cout << "file exists" << std::endl;
   }
-  std::cout << "reading in lines" << std::endl;
+  //std::cout << "reading in lines" << std::endl;
   string line;
   while (getline(in_map_, line)) {
     std::istringstream iss(line);
@@ -115,7 +118,7 @@ int main() {
     map_waypoints_dy.push_back(d_y);
     std::cout << "read in a line" << std::endl;
   }
-  std::cout << "read in all lines" << std::endl;
+  //std::cout << "read in all lines" << std::endl;
 #ifdef UWS_VCPKG
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
     &map_waypoints_dx, &map_waypoints_dy]
@@ -173,7 +176,7 @@ int main() {
 
           double maxDistTravel=0.42; // distance in meters to travel
           int lane = (car_d-2.0)/4;
-          std::cout << "received data" << std::endl;
+          //std::cout << "received data" << std::endl;
           int prevPathSize=previous_path_x.size();
           double pos_x;
           double pos_y;
@@ -195,7 +198,7 @@ int main() {
           double min_speed = ref_speed-0.15;
 
 
-          prevPathSize=std::min(prevPathSize,5);
+          prevPathSize=std::min(prevPathSize,25);
           for (int i =0; i < prevPathSize; ++i) {
             next_x_vals.push_back(previous_path_x[i]);
             next_y_vals.push_back(previous_path_y[i]);
@@ -212,6 +215,7 @@ int main() {
             acc_y=0;
             v_x=0;
             v_y=0;
+            acc = 0;
           } else {
             acc=0;
             speed=0;
@@ -262,7 +266,7 @@ int main() {
               }
             }
           }**/
-          int numSteps=10;
+          int numSteps=25;
           int projSteps=std::max(3,(50-prevPathSize)/numSteps);
           vector<double> xPath(projSteps), yPath(projSteps);
           for (int i=0; i < projSteps; ++i) {
