@@ -86,10 +86,17 @@ int main() {
 
   // Waypoint map to read from
   string map_file_ = "../data/highway_map.csv";
+
   // The max s value before wrapping around the track back to 0
   double max_s = 6945.554;
 
   std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
+  if (in_map_.good()) {
+    std::cout << "file exists" << std::endl;
+  }
+  if (in_map2_.good()) {
+    std::cout << "file 2 exists" << std::endl;
+  }
   std::cout << "reading in lines" << std::endl;
   string line;
   while (getline(in_map_, line)) {
@@ -111,7 +118,7 @@ int main() {
     map_waypoints_dy.push_back(d_y);
     std::cout << "read in a line" << std::endl;
   }
-
+  std::cout << "read in all lines" << std::endl;
 #ifdef UWS_VCPKG
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
     &map_waypoints_dx, &map_waypoints_dy]
