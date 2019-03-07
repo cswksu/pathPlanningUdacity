@@ -362,7 +362,7 @@ int main() {
             if (speed < 0) {
               std::cout<<"negative speed"<<std::endl;
             }
-            std::cout:: "tangential acceleration out: " <<acc_tan <<std::endl;
+            std::cout<< "tangential acceleration out: " <<acc_tan <<std::endl;
             speed += acc_tan * 0.02;
             //std::cout << "speed requested: " << speed <<std::endl;
             /*else if (speed > max_speed) {
