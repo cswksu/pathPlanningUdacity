@@ -145,7 +145,7 @@ int main() {
         
         if (event == "telemetry") {
           // j[1] is the data JSON object
-          
+          std::cout<<"msg received"<<std::endl;
           // Main car's localization Data
           double car_x = j[1]["x"];
           double car_y = j[1]["y"];
