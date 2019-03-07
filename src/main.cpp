@@ -152,7 +152,7 @@ int main() {
           double car_s = j[1]["s"];
           double car_d = j[1]["d"];
           double car_yaw = j[1]["yaw"];
-          double car_speed = j[1]["speed"];
+          double car_speed = j[1]["speed"]*0.44704;
 
           // Previous path data given to the Planner
           auto previous_path_x = j[1]["previous_path_x"];
