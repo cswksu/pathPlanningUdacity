@@ -231,13 +231,14 @@ int main() {
             pos_y = previous_path_y[prevPathSize-1];
             theta=deg2rad(car_yaw);
             if (prevPathSize>1) {
-              lastSpeed = speed;
+              
               prev_pos_x = previous_path_x[prevPathSize-2];
               prev_pos_y = previous_path_y[prevPathSize-2];
               v_x=(pos_x-prev_pos_x)/0.02;
               v_y=(pos_y-prev_pos_y)/0.02;
               theta = atan2(pos_y-prev_pos_y,pos_x-prev_pos_x);
               speed = sqrt(v_x*v_x + v_y * v_y);
+              lastSpeed = speed;
               rCurve = 9999;
               if (prevPathSize>2) {
                 prev_prev_pos_x=previous_path_x[prevPathSize-3];
@@ -245,6 +246,7 @@ int main() {
                 acc_x=(pos_x-2*prev_pos_x+prev_prev_pos_x)/(0.02*0.02);
                 acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
                 acc = sqrt(acc_x*acc_x+acc_y*acc_y);
+                lastSpeed=sqrt(pow(prev_pos_x-prev_prev_pos_x,2)+pow(prev_pos_y-prev_prev_pos_y,2));
                 rCurve = abs(pow(speed, 3) / (v_x*acc_y - v_y * acc_x));
                 if (prevPathSize > 3) {
                   prev3_pos_x= previous_path_x[prevPathSize - 4];
