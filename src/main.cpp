@@ -303,12 +303,17 @@ int main() {
           int numSteps=25;
           int projSteps=std::max(3,(50-prevPathSize)/numSteps);
           vector<double> xPath(projSteps), yPath(projSteps);
+          double tempS=pos_s;
+          double tempD= 6.0;
+          vector<double> xyTemp= getXY(tempS, tempD,map_waypoints_s, map_waypoints_x, map_waypoints_y);
+          double xOffset=xyTemp[0];
+          double yOffset=xyTemp[1];
           for (int i=0; i < projSteps; ++i) {
             double tempS=pos_s+i*(speed+5)*numSteps*0.02;
             double tempD= 6.0;
             vector<double> xyTemp= getXY(tempS, tempD,map_waypoints_s, map_waypoints_x, map_waypoints_y);
-            xPath[i]=xyTemp[0];
-            yPath[i]=xyTemp[1];
+            xPath[i]=xyTemp[0]-xOffset;
+            yPath[i]=xyTemp[1]-yOffset;
             
           }
           double thetaRotCW=atan2(yPath[projSteps-1]-yPath[0],xPath[projSteps-1]-xPath[0]);
@@ -323,8 +328,8 @@ int main() {
               
             }
           }
-          double pos_x_trans=xPath[0]*cos(thetaRotCW)+yPath[0]*sin(thetaRotCW);
-          double pos_y_trans=-xPath[0]*sin(thetaRotCW)+yPath[0]*cos(thetaRotCW);
+          double pos_x_trans=0;
+          double pos_y_trans=0;
           tk::spline s;
           s.set_points(xTransPath,yTransPath);
           std::cout<<"incoming speed: " << speed <<std::endl;
@@ -354,6 +359,7 @@ int main() {
             }
             
             speed += acc_tan * 0.02;
+            std::cout << "speed requested: " << speed <<std::endl;
             /*else if (speed > max_speed) {
               speed = max_speed;
               std::cout << "overspeed warning" << std::endl;
@@ -404,8 +410,8 @@ int main() {
             pos_y_trans=tempY;
             double oldPos_x=pos_x;
             double oldPos_y=pos_y;
-            pos_x=pos_x_trans*cos(-thetaRotCW)+pos_y_trans*sin(-thetaRotCW);
-            pos_y= -pos_x_trans*sin(-thetaRotCW)+pos_y_trans*cos(-thetaRotCW);
+            pos_x=pos_x_trans*cos(-thetaRotCW)+pos_y_trans*sin(-thetaRotCW)+xOffset;
+            pos_y= -pos_x_trans*sin(-thetaRotCW)+pos_y_trans*cos(-thetaRotCW)+yOffset;
             
             /**pos_s+=speed*0.02;
             pos_d = 6.0;
