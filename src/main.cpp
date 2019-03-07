@@ -339,10 +339,10 @@ int main() {
           for (int i =0; i < 50 - prevPathSize; ++i) {
             double acc_cent = pow(speed, 2) / rCurve;
             double acc_tan = (speed - lastSpeed)/0.02;
-            bool underspeed = speed < min_speed;
-            bool overspeed = speed > max_speed;
-            bool overAcc = abs(acc_tan) > 5.0;
-            bool coastDown = acc_tan >= sqrt(abs(14.0*(min_speed - speed)));
+            bool underspeed = (speed < min_speed);
+            bool overspeed = (speed > max_speed);
+            bool overAcc = (abs(acc_tan) > 5.0);
+            bool coastDown = (acc_tan >= sqrt(abs(14.0*(min_speed - speed))));
             if (underspeed) {
               if ((!overAcc) && (!coastDown)) {
                 acc_tan = std::min(5.0, acc_tan + 0.02*5.0);
