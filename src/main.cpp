@@ -340,6 +340,7 @@ int main() {
           for (int i =0; i < 50 - prevPathSize; ++i) {
             double acc_cent = pow(speed, 2) / rCurve;
             double acc_tan = (speed - lastSpeed)/0.02;
+            std::cout << "tangential acceleration incoming: " << acc_tan <<std::endl;
             bool underspeed = (speed < min_speed);
             bool overspeed = (speed > max_speed);
             bool overAcc = (abs(acc_tan) > 5.0);
@@ -361,9 +362,9 @@ int main() {
             if (speed < 0) {
               std::cout<<"negative speed"<<std::endl;
             }
-            
+            std::cout:: "tangential acceleration out: " <<acc_tan <<std::endl;
             speed += acc_tan * 0.02;
-            std::cout << "speed requested: " << speed <<std::endl;
+            //std::cout << "speed requested: " << speed <<std::endl;
             /*else if (speed > max_speed) {
               speed = max_speed;
               std::cout << "overspeed warning" << std::endl;
@@ -403,7 +404,7 @@ int main() {
 
 
             }
-            std::cout << "temp speed used: " << tempSpeed <<std::endl;
+            //std::cout << "temp speed used: " << tempSpeed <<std::endl;
             //std::cout << "trajectory found" << std::endl;
             /*
             double transHdg=atan2(s(pos_x_trans+1.0)-pos_y_trans,1.0);
@@ -417,9 +418,9 @@ int main() {
             double oldPos_x=pos_x;
             double oldPos_y=pos_y;
             pos_x+=deltaX*cos(-thetaRotCW)+deltaY*sin(-thetaRotCW);
-            std::cout << "car's new x position: " << pos_x << std::endl;
+            //std::cout << "car's new x position: " << pos_x << std::endl;
             pos_y+= -deltaX*sin(-thetaRotCW)+deltaY*cos(-thetaRotCW);
-            std::cout << "car's new y position: " << pos_y << std::endl;
+            //std::cout << "car's new y position: " << pos_y << std::endl;
             
             /**pos_s+=speed*0.02;
             pos_d = 6.0;
