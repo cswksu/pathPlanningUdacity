@@ -338,20 +338,20 @@ int main() {
                 acc_tan = std::min(5.0, acc_tan + 0.02*5.0);
                 std::cout << "jerk up" << std::endl;
               } else {//if ((acc_tan >= 5.0)||(acc_tan>=sqrt(abs(10.0*(min_speed-speed))))) {
-                acc_tan -= 7.0 * 0.02;
+                acc_tan =std::max(-7.0, acc_tan-7.0 * 0.02);
                 std::cout << "jerk down" << std::endl;
               }
-              speed += acc_tan * 0.02;
             } else if (overspeed ) {
-              acc_tan -=8.0*0.02;
-              speed += acc_tan * 0.02;
+              acc_tan =std::max(-7.0,acc_tan-8.0*0.02);
               std::cout << "brake" << std::endl;
               //speed = max_speed;
             }
-            speed = 22;
+            //speed = 22;
             if (speed < 0) {
               std::cout<<"negative speed"<<std::endl;
             }
+            
+            speed += acc_tan * 0.02;
             /*else if (speed > max_speed) {
               speed = max_speed;
               std::cout << "overspeed warning" << std::endl;
