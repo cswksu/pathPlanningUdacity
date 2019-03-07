@@ -418,7 +418,7 @@ int main() {
             double oldPos_y=pos_y;
             pos_x+=deltaX*cos(-thetaRotCW)+deltaY*sin(-thetaRotCW);
             std::cout << "car's new x position: " << pos_x << std::endl;
-            pos_y+= -deltaY*sin(-thetaRotCW)+deltaY*cos(-thetaRotCW);
+            pos_y+= -deltaX*sin(-thetaRotCW)+deltaY*cos(-thetaRotCW);
             std::cout << "car's new y position: " << pos_y << std::endl;
             
             /**pos_s+=speed*0.02;
