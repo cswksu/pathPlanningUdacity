@@ -92,10 +92,7 @@ int main() {
 #endif
   // The max s value before wrapping around the track back to 0
   double max_s = 6945.554;
-  double maxDistTravel=0.42; // distance in meters to travel
-  double ref_speed = 50.0 * maxDistTravel;
-  double max_speed = ref_speed+0.15;
-  double min_speed = ref_speed-0.15;
+  
 
   std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
   if (in_map_.good()) {
@@ -157,6 +154,10 @@ int main() {
           double car_d = j[1]["d"];
           double car_yaw = j[1]["yaw"];
           double car_speed = j[1]["speed"]*0.44704;
+          double maxDistTravel=0.42; // distance in meters to travel
+          double ref_speed = 50.0 * maxDistTravel;
+          double max_speed = ref_speed+0.15;
+          double min_speed = ref_speed-0.15;
 
           // Previous path data given to the Planner
           auto previous_path_x = j[1]["previous_path_x"];
