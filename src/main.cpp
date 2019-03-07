@@ -269,7 +269,7 @@ int main() {
           double sf_vx;
           double sf_vy;
           double tempSpeed;
-          
+          /*
           for (int i=0; i<sensor_fusion.size(); ++i) {
             //std::cout<<sensor_fusion[i][0]<<std::endl;
             sf_d=sensor_fusion[i][6];
@@ -296,7 +296,7 @@ int main() {
             ref_speed = 50.0 * maxDistTravel;
             max_speed = ref_speed + 0.15;
             min_speed = ref_speed - 0.15;
-          }
+          } */
 
           int numSteps=25;
           int projSteps=std::max(3,(50-prevPathSize)/numSteps);
@@ -315,7 +315,7 @@ int main() {
             xTransPath[i]=xPath[i]*cos(thetaRotCW)+yPath[i]*sin(thetaRotCW);
             yTransPath[i]=-xPath[i]*sin(thetaRotCW)+yPath[i]*cos(thetaRotCW);
             if (i > 0) {
-              if (xTransPath[i]<xTransPath[i-1]) {
+              if (xTransPath[i]<=xTransPath[i-1]) {
                 std::cout << "non-sorted" << std::endl;
               }
               
@@ -328,19 +328,26 @@ int main() {
           for (int i =0; i < 50 - prevPathSize; ++i) {
             double acc_cent = pow(speed, 2) / rCurve;
             double acc_tan = (speed - lastSpeed)/0.02;
-            if (speed < min_speed) {
-              if ((acc_tan < 5.0) && (abs(acc_tan)<sqrt(abs(10.0*(min_speed-speed))))) {
+            boolean underspeed = speed < min_speed;
+            boolean overspeed = speed > max_speed;
+            boolean overAcc = abs(acc_tan) > 5.0;
+            boolean coastDown = acc_tan >= sqrt(abs(10.0*(min_speed - speed)));
+            if (underspeed) {
+              if ((!overAcc) && (!coastDown)) {
                 acc_tan = std::min(5.0, acc_tan + 0.02*5.0);
+                std::cout << "jerk up" << std::endl;
               } else {//if ((acc_tan >= 5.0)||(acc_tan>=sqrt(abs(10.0*(min_speed-speed))))) {
                 acc_tan -= 5.0 * 0.02;
+                std::cout << "jerk down" << std::endl;
               }
               speed += acc_tan * 0.02;
-            } else if (speed > max_speed ) {
+            } else if (overspeed ) {
               acc_tan -=8.0*0.02;
               speed += acc_tan * 0.02;
+              std::cout << "brake" << std::endl;
               //speed = max_speed;
             }
-            //speed = 22;
+            speed = 22;
             if (speed < 0) {
               std::cout<<"negative speed"<<std::endl;
             }
@@ -353,13 +360,13 @@ int main() {
             double tempX=pos_x_trans+speed*0.02;
             double tempY=s(tempX);
             double tempSpeed=sqrt(pow(tempX-pos_x_trans,2)+pow(tempY-pos_y_trans,2))/0.02;
-            std::cout << "finding trajectory" << std::endl;
+            //std::cout << "finding trajectory" << std::endl;
             bool lastOverspeed = true;
             double incrementer = 0.01;
             while(abs(tempSpeed-speed)>allowableDiff) {
-              std::cout << "Temp Speed: " << tempSpeed << std::endl;
+              /*std::cout << "Temp Speed: " << tempSpeed << std::endl;
               std::cout << "Targ Speed: " << speed << std::endl;
-              std::cout << "Difference: " << abs(tempSpeed - speed) << std::endl;
+              std::cout << "Difference: " << abs(tempSpeed - speed) << std::endl;*/
               if (tempSpeed-speed>0) {
                 if (!lastOverspeed) {
                   incrementer *= 0.5;
@@ -384,7 +391,7 @@ int main() {
 
             }
 
-            std::cout << "trajectory found" << std::endl;
+            //std::cout << "trajectory found" << std::endl;
             /*
             double transHdg=atan2(s(pos_x_trans+1.0)-pos_y_trans,1.0);
             double deltaXRot=speed*0.02*cos(transHdg);
@@ -429,6 +436,7 @@ int main() {
             v_y=(pos_y-prev_pos_y)/0.02;
             lastSpeed = speed;
             speed = sqrt(v_x*v_x + v_y * v_y);
+            std::cout << "speed" << speed << std::endl;
             if (next_x_vals.size()>2) {
               prev_prev_pos_x=next_x_vals[next_x_vals.size()-3];
               prev_prev_pos_y=next_y_vals[next_y_vals.size()-3];
