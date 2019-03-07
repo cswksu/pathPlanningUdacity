@@ -325,6 +325,7 @@ int main() {
           double pos_y_trans=-xPath[0]*sin(thetaRotCW)+yPath[0]*cos(thetaRotCW);
           tk::spline s;
           s.set_points(xTransPath,yTransPath);
+          std::cout<<"incoming speed: " << speed <<std::endl;
           for (int i =0; i < 50 - prevPathSize; ++i) {
             double acc_cent = pow(speed, 2) / rCurve;
             double acc_tan = (speed - lastSpeed)/0.02;
@@ -390,7 +391,7 @@ int main() {
 
 
             }
-
+            std::cout << "temp speed used: " << tempSpeed <<std::endl;
             //std::cout << "trajectory found" << std::endl;
             /*
             double transHdg=atan2(s(pos_x_trans+1.0)-pos_y_trans,1.0);
@@ -436,7 +437,7 @@ int main() {
             v_y=(pos_y-prev_pos_y)/0.02;
             lastSpeed = speed;
             speed = sqrt(v_x*v_x + v_y * v_y);
-            std::cout << "speed" << speed << std::endl;
+            std::cout << "speed post-calculated: " << speed << std::endl;
             if (next_x_vals.size()>2) {
               prev_prev_pos_x=next_x_vals[next_x_vals.size()-3];
               prev_prev_pos_y=next_y_vals[next_y_vals.size()-3];
