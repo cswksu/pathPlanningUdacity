@@ -214,16 +214,15 @@ int main() {
             pos_x = car_x;
             pos_y = car_y;
             theta=deg2rad(car_yaw);
-            vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
-            pos_s=frenetPos[0];
-            pos_d=frenetPos[1];
+            pos_s=car_s;
+            pos_d=car_d;
             acc_x=0;
             acc_y=0;
             v_x=0;
             v_y=0;
             acc = 0;
             rCurve = 9999;
-            speed = sqrt(v_x*v_x + v_y * v_y);
+            speed = car_speed;
           } else {
             acc=0;
             speed=0;
@@ -336,10 +335,10 @@ int main() {
           for (int i =0; i < 50 - prevPathSize; ++i) {
             double acc_cent = pow(speed, 2) / rCurve;
             double acc_tan = (speed - lastSpeed)/0.02;
-            boolean underspeed = speed < min_speed;
-            boolean overspeed = speed > max_speed;
-            boolean overAcc = abs(acc_tan) > 5.0;
-            boolean coastDown = acc_tan >= sqrt(abs(14.0*(min_speed - speed)));
+            bool underspeed = speed < min_speed;
+            bool overspeed = speed > max_speed;
+            bool overAcc = abs(acc_tan) > 5.0;
+            bool coastDown = acc_tan >= sqrt(abs(14.0*(min_speed - speed)));
             if (underspeed) {
               if ((!overAcc) && (!coastDown)) {
                 acc_tan = std::min(5.0, acc_tan + 0.02*5.0);
@@ -441,9 +440,9 @@ int main() {
             vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
             pos_s=frenetPos[0];
             pos_d=frenetPos[1];
+            lastSpeed = sqrt(v_x*v_x+v_y*v_y);
             v_x=(pos_x-prev_pos_x)/0.02;
             v_y=(pos_y-prev_pos_y)/0.02;
-            lastSpeed = speed;
             speed = sqrt(v_x*v_x + v_y * v_y);
             std::cout << "speed post-calculated: " << speed << std::endl;
             if (next_x_vals.size()>2) {
