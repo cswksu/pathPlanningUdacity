@@ -76,7 +76,7 @@ int main() {
   vector<double> map_waypoints_s;
   vector<double> map_waypoints_dx;
   vector<double> map_waypoints_dy;
-  char state;
+  //char state;
   //a for accelerate in lane
   //c for constrained by ahead vehicle
   //k for prepare lane change left
@@ -92,6 +92,10 @@ int main() {
 #endif
   // The max s value before wrapping around the track back to 0
   double max_s = 6945.554;
+  double maxDistTravel=0.42; // distance in meters to travel
+  double ref_speed = 50.0 * maxDistTravel;
+  double max_speed = ref_speed+0.15;
+  double min_speed = ref_speed-0.15;
 
   std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
   if (in_map_.good()) {
@@ -174,7 +178,7 @@ int main() {
            *   sequentially every .02 seconds
            */
 
-          double maxDistTravel=0.42; // distance in meters to travel
+          
           int lane = (car_d-2.0)/4;
           //std::cout << "received data" << std::endl;
           int prevPathSize=previous_path_x.size();
@@ -195,9 +199,7 @@ int main() {
           double v_y;
           double speed;
           double acc;
-          double ref_speed = 50.0 * maxDistTravel;
-          double max_speed = ref_speed+0.15;
-          double min_speed = ref_speed-0.15;
+          
           double rCurve;
           double jerk_x=0;
           double jerk_y=0;
@@ -212,7 +214,9 @@ int main() {
           
           if (prevPathSize==0) {
             pos_x = car_x;
+            std::cout<<"car's initial x position: " << pos_x<<std::endl;
             pos_y = car_y;
+            std::cout<<"car's initial y position: " << pos_y<<std::endl;
             theta=deg2rad(car_yaw);
             pos_s=car_s;
             pos_d=car_d;
@@ -410,7 +414,9 @@ int main() {
             double oldPos_x=pos_x;
             double oldPos_y=pos_y;
             pos_x=pos_x_trans*cos(-thetaRotCW)+pos_y_trans*sin(-thetaRotCW)+xOffset;
+            std::cout << "car's new x position: " << pos_x << std::endl;
             pos_y= -pos_x_trans*sin(-thetaRotCW)+pos_y_trans*cos(-thetaRotCW)+yOffset;
+            std::cout << "car's new y position: " << pos_y << std::endl;
             
             /**pos_s+=speed*0.02;
             pos_d = 6.0;
