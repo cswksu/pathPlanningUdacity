@@ -154,10 +154,10 @@ int main() {
           double car_d = j[1]["d"];
           double car_yaw = j[1]["yaw"];
           double car_speed = j[1]["speed"]*0.44704;
-          double maxDistTravel=0.42; // distance in meters to travel
-          double ref_speed = 50.0 * maxDistTravel;
-          double max_speed = ref_speed+0.15;
-          double min_speed = ref_speed-0.15;
+          double maxDistTravel=0.44704; // distance in meters to travel
+          double ref_speed = 45.0 * maxDistTravel;
+          double max_speed = ref_speed+2.0*maxDistTravel;
+          double min_speed = ref_speed-2.0*maxDistTravel;
 
           // Previous path data given to the Planner
           auto previous_path_x = j[1]["previous_path_x"];
@@ -304,8 +304,8 @@ int main() {
             min_speed = ref_speed - 0.15;
           } */
 
-          int numSteps=25;
-          int projSteps=std::max(3,(50-prevPathSize)/numSteps);
+          int numSteps=30;
+          int projSteps = 5;//std::max(3,(50-prevPathSize)/numSteps);
           vector<double> xPath(projSteps), yPath(projSteps);
           double tempS=pos_s;
           double tempD= 6.0;
@@ -357,11 +357,20 @@ int main() {
                 std::cout << "jerk down" << std::endl;
               }
             } else if (overspeed ) {
+              if (overAcc) {
+                acc_tan = 5.0;
+              }
               acc_tan =std::max(-7.0,acc_tan-8.0*0.02);
               std::cout << "brake" << std::endl;
               //speed = max_speed;
+            } else {
+              if (coastDown) {
+                acc_tan = std::max(-7.0, acc_tan - 7.0 * 0.02);
+                std::cout << "jerk down" << std::endl;
+              }
             }
             //speed = 22;
+            speed = std::min(speed, max_speed);
             if (speed < 0) {
               std::cout<<"negative speed"<<std::endl;
             }
@@ -464,6 +473,7 @@ int main() {
               acc_x=(pos_x-2*prev_pos_x+prev_prev_pos_x)/(0.02*0.02);
               acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
               rCurve = abs(pow(speed, 3) / (v_x*acc_y - v_y * acc_x));
+              lastSpeed = sqrt(pow(prev_pos_x - prev_prev_pos_x, 2) + pow(prev_pos_y - prev_prev_pos_y, 2))/0.02;
               if (next_x_vals.size() > 3) {
                 prev3_pos_x = next_x_vals[next_x_vals.size() - 4];
                 prev3_pos_y = next_y_vals[next_x_vals.size() - 4];
