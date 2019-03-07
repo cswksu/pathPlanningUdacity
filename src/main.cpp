@@ -250,7 +250,7 @@ int main() {
                 acc_x=(pos_x-2*prev_pos_x+prev_prev_pos_x)/(0.02*0.02);
                 acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
                 acc = sqrt(acc_x*acc_x+acc_y*acc_y);
-                lastSpeed=sqrt(pow(prev_pos_x-prev_prev_pos_x,2)+pow(prev_pos_y-prev_prev_pos_y,2));
+                lastSpeed=sqrt(pow(prev_pos_x-prev_prev_pos_x,2)+pow(prev_pos_y-prev_prev_pos_y,2))/0.02;
                 rCurve = abs(pow(speed, 3) / (v_x*acc_y - v_y * acc_x));
                 if (prevPathSize > 3) {
                   prev3_pos_x= previous_path_x[prevPathSize - 4];
