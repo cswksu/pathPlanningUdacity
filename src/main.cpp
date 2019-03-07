@@ -116,7 +116,7 @@ int main() {
     map_waypoints_s.push_back(s);
     map_waypoints_dx.push_back(d_x);
     map_waypoints_dy.push_back(d_y);
-    std::cout << "read in a line" << std::endl;
+    //std::cout << "read in a line" << std::endl;
   }
   //std::cout << "read in all lines" << std::endl;
 #ifdef UWS_VCPKG
@@ -186,6 +186,8 @@ int main() {
           double prev_pos_y;
           double prev_prev_pos_x;
           double prev_prev_pos_y;
+          double prev3_pos_x;
+          double prev3_pos_y;
           double theta;
           double acc_x;
           double acc_y;
@@ -196,9 +198,13 @@ int main() {
           double ref_speed = 50.0 * maxDistTravel;
           double max_speed = ref_speed+0.15;
           double min_speed = ref_speed-0.15;
+          double rCurve;
+          double jerk_x=0;
+          double jerk_y=0;
+          double jerk=0;
+          double lastSpeed = 0;
 
-
-          prevPathSize=std::min(prevPathSize,10);
+          prevPathSize=std::min(prevPathSize,15);
           for (int i =0; i < prevPathSize; ++i) {
             next_x_vals.push_back(previous_path_x[i]);
             next_y_vals.push_back(previous_path_y[i]);
@@ -216,6 +222,8 @@ int main() {
             v_x=0;
             v_y=0;
             acc = 0;
+            rCurve = 9999;
+            speed = sqrt(v_x*v_x + v_y * v_y);
           } else {
             acc=0;
             speed=0;
@@ -223,25 +231,37 @@ int main() {
             pos_y = previous_path_y[prevPathSize-1];
             theta=deg2rad(car_yaw);
             if (prevPathSize>1) {
+              lastSpeed = speed;
               prev_pos_x = previous_path_x[prevPathSize-2];
               prev_pos_y = previous_path_y[prevPathSize-2];
               v_x=(pos_x-prev_pos_x)/0.02;
               v_y=(pos_y-prev_pos_y)/0.02;
               theta = atan2(pos_y-prev_pos_y,pos_x-prev_pos_x);
+              speed = sqrt(v_x*v_x + v_y * v_y);
+              rCurve = 9999;
               if (prevPathSize>2) {
                 prev_prev_pos_x=previous_path_x[prevPathSize-3];
                 prev_prev_pos_y=previous_path_y[prevPathSize-3];
                 acc_x=(pos_x-2*prev_pos_x+prev_prev_pos_x)/(0.02*0.02);
                 acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
                 acc = sqrt(acc_x*acc_x+acc_y*acc_y);
+                rCurve = abs(pow(speed, 3) / (v_x*acc_y - v_y * acc_x));
+                if (prevPathSize > 3) {
+                  prev3_pos_x= previous_path_x[prevPathSize - 4];
+                  prev3_pos_y = previous_path_y[prevPathSize - 4];
+                  jerk_x = -pos_x + 3 * prev_pos_x - 3 * prev_prev_pos_x + prev3_pos_x;
+                  jerk_y = -pos_y + 3 * prev_pos_y - 3 * prev_prev_pos_y + prev3_pos_y;
+                  jerk = sqrt(jerk_x*jerk_x + jerk_y * jerk_y);
+                }
               }
               
             }
+            
             vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
             pos_s=frenetPos[0];
             pos_d=frenetPos[1];
           }
-          speed = sqrt(v_x*v_x+v_y*v_y);
+          
           double car_ahead_speed=999;
           double car_ahead_dist=999;
           double sf_s;
@@ -250,7 +270,7 @@ int main() {
           double sf_vy;
           double tempSpeed;
           
-          /**for (int i=0; i<sensor_fusion.size(); ++i) {
+          for (int i=0; i<sensor_fusion.size(); ++i) {
             //std::cout<<sensor_fusion[i][0]<<std::endl;
             sf_d=sensor_fusion[i][6];
             if (abs(sf_d-car_d)<4) {
@@ -265,7 +285,19 @@ int main() {
                 }
               }
             }
-          }**/
+          }
+
+          if ((car_ahead_dist < 50) && (car_ahead_speed < ref_speed)) {
+            ref_speed = car_ahead_speed - 0.5;
+            max_speed = ref_speed + 0.15;
+            min_speed = ref_speed - 0.15;
+          }
+          else {
+            ref_speed = 50.0 * maxDistTravel;
+            max_speed = ref_speed + 0.15;
+            min_speed = ref_speed - 0.15;
+          }
+
           int numSteps=25;
           int projSteps=std::max(3,(50-prevPathSize)/numSteps);
           vector<double> xPath(projSteps), yPath(projSteps);
@@ -294,34 +326,65 @@ int main() {
           tk::spline s;
           s.set_points(xTransPath,yTransPath);
           for (int i =0; i < 50 - prevPathSize; ++i) {
+            double acc_cent = pow(speed, 2) / rCurve;
+            double acc_tan = (speed - lastSpeed)/0.02;
             if (speed < min_speed) {
-              if ((acc < 5.0) && (acc<sqrt(10.0*(max_speed-speed)))) {
-                acc += 5.0 * 0.02;
-              } else if ((acc < 5.0) && (acc>=sqrt(10.0*(max_speed-speed)))) {
-                acc -= 5.0 * 0.02;
+              if ((acc_tan < 5.0) && (abs(acc_tan)<sqrt(abs(10.0*(min_speed-speed))))) {
+                acc_tan = std::min(5.0, acc_tan + 0.02*5.0);
+              } else {//if ((acc_tan >= 5.0)||(acc_tan>=sqrt(abs(10.0*(min_speed-speed))))) {
+                acc_tan -= 5.0 * 0.02;
               }
-              speed += acc * 0.02;
+              speed += acc_tan * 0.02;
             } else if (speed > max_speed ) {
-              speed -= 5.0 * 0.02;
+              acc_tan -=8.0*0.02;
+              speed += acc_tan * 0.02;
+              //speed = max_speed;
             }
             //speed = 22;
             if (speed < 0) {
               std::cout<<"negative speed"<<std::endl;
             }
+            /*else if (speed > max_speed) {
+              speed = max_speed;
+              std::cout << "overspeed warning" << std::endl;
+            }*/
             
             double allowableDiff=0.02;
             double tempX=pos_x_trans+speed*0.02;
             double tempY=s(tempX);
             double tempSpeed=sqrt(pow(tempX-pos_x_trans,2)+pow(tempY-pos_y_trans,2))/0.02;
+            std::cout << "finding trajectory" << std::endl;
+            bool lastOverspeed = true;
+            double incrementer = 0.01;
             while(abs(tempSpeed-speed)>allowableDiff) {
+              std::cout << "Temp Speed: " << tempSpeed << std::endl;
+              std::cout << "Targ Speed: " << speed << std::endl;
+              std::cout << "Difference: " << abs(tempSpeed - speed) << std::endl;
               if (tempSpeed-speed>0) {
-                tempX-=0.01;
+                if (!lastOverspeed) {
+                  incrementer *= 0.5;
+                }
+
+                tempX -= incrementer;
+                lastOverspeed = true;
               } else {
-                tempX+=0.01;
+                if (lastOverspeed) {
+                  incrementer *= 0.5;
+                  
+                }
+                tempX += incrementer;
+                lastOverspeed = false;
+                
               }
+              //std::cout << tempX << std::endl;
               tempY=s(tempX);
               tempSpeed=sqrt(pow(tempX-pos_x_trans,2)+pow(tempY-pos_y_trans,2))/0.02;
+              
+
+
             }
+
+            std::cout << "trajectory found" << std::endl;
             /*
             double transHdg=atan2(s(pos_x_trans+1.0)-pos_y_trans,1.0);
             double deltaXRot=speed*0.02*cos(transHdg);
@@ -346,10 +409,12 @@ int main() {
             **/
             /*double speedCheck = sqrt(std::pow((pos_x-oldPos_x)/0.02,2)+std::pow((pos_y-oldPos_y)/0.02,2));
             if (speedCheck > max_speed) {
+              
               double overageRatio=speedCheck/max_speed;
+              std::cout << "overspeed: " << overageRatio << std::endl;
               pos_x=oldPos_x+(pos_x-oldPos_x)/overageRatio;
               pos_y=oldPos_y+(pos_y-oldPos_y)/overageRatio;
-              pos_x_trans=pos_x*cos(thetaRotCW)-pos_y*sin(thetaRotCW);
+              pos_x_trans=pos_x*cos(thetaRotCW)+pos_y*sin(thetaRotCW);
               pos_y_trans=-pos_x*sin(thetaRotCW)+pos_y*cos(thetaRotCW);
             }*/
             next_x_vals.push_back(pos_x);
@@ -362,13 +427,23 @@ int main() {
             pos_d=frenetPos[1];
             v_x=(pos_x-prev_pos_x)/0.02;
             v_y=(pos_y-prev_pos_y)/0.02;
+            lastSpeed = speed;
+            speed = sqrt(v_x*v_x + v_y * v_y);
             if (next_x_vals.size()>2) {
               prev_prev_pos_x=next_x_vals[next_x_vals.size()-3];
               prev_prev_pos_y=next_y_vals[next_y_vals.size()-3];
               acc_x=(pos_x-2*prev_pos_x+prev_prev_pos_x)/(0.02*0.02);
               acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
+              rCurve = abs(pow(speed, 3) / (v_x*acc_y - v_y * acc_x));
+              if (next_x_vals.size() > 3) {
+                prev3_pos_x = next_x_vals[next_x_vals.size() - 4];
+                prev3_pos_y = next_y_vals[next_x_vals.size() - 4];
+                jerk_x = -pos_x + 3 * prev_pos_x - 3 * prev_prev_pos_x + prev3_pos_x;
+                jerk_y = -pos_y + 3 * prev_pos_y - 3 * prev_prev_pos_y + prev3_pos_y;
+                jerk = sqrt(jerk_x*jerk_x + jerk_y * jerk_y);
+              }
             }
-            speed = sqrt(v_x*v_x+v_y*v_y);
+            
             acc = sqrt(acc_x*acc_x+acc_y*acc_y);
           }
           
