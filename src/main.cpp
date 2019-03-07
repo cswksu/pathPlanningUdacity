@@ -331,13 +331,13 @@ int main() {
             boolean underspeed = speed < min_speed;
             boolean overspeed = speed > max_speed;
             boolean overAcc = abs(acc_tan) > 5.0;
-            boolean coastDown = acc_tan >= sqrt(abs(10.0*(min_speed - speed)));
+            boolean coastDown = acc_tan >= sqrt(abs(14.0*(min_speed - speed)));
             if (underspeed) {
               if ((!overAcc) && (!coastDown)) {
                 acc_tan = std::min(5.0, acc_tan + 0.02*5.0);
                 std::cout << "jerk up" << std::endl;
               } else {//if ((acc_tan >= 5.0)||(acc_tan>=sqrt(abs(10.0*(min_speed-speed))))) {
-                acc_tan -= 5.0 * 0.02;
+                acc_tan -= 7.0 * 0.02;
                 std::cout << "jerk down" << std::endl;
               }
               speed += acc_tan * 0.02;
