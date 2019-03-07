@@ -218,8 +218,8 @@ int main() {
             pos_d=car_d;
             acc_x=0;
             acc_y=0;
-            v_x=0;
-            v_y=0;
+            v_x=car_speed*cos(theta);
+            v_y=car_speed*sin(theta);
             acc = 0;
             rCurve = 9999;
             speed = car_speed;
