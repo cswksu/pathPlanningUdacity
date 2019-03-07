@@ -349,7 +349,10 @@ int main() {
               if ((!overAcc) && (!coastDown)) {
                 acc_tan = std::min(5.0, acc_tan + 0.02*5.0);
                 std::cout << "jerk up" << std::endl;
-              } else {//if ((acc_tan >= 5.0)||(acc_tan>=sqrt(abs(10.0*(min_speed-speed))))) {
+              } else if (overAcc) {
+                acc_tan = 5.0;
+                std::cout << "overaccelerating, capped" << std::endl;
+              } else if (coastDown) {
                 acc_tan =std::max(-7.0, acc_tan-7.0 * 0.02);
                 std::cout << "jerk down" << std::endl;
               }
@@ -370,7 +373,7 @@ int main() {
               std::cout << "overspeed warning" << std::endl;
             }*/
             
-            double allowableDiff=0.02;
+            double allowableDiff=0.01;
             double tempX=pos_x_trans+speed*0.02;
             double tempY=s(tempX);
             double tempSpeed=sqrt(pow(tempX-pos_x_trans,2)+pow(tempY-pos_y_trans,2))/0.02;
