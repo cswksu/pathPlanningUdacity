@@ -34,12 +34,7 @@
 .vs/pathPlanning/v15/Browse.VC.db
 .vs/pathPlanning/v15/Browse.VC.opendb
 .vs/pathPlanning/v15/ipch/AutoPCH/cf1abd9b293676/MAIN.ipch
-Eigen.natvis
-pathPlanning.sln
-pathPlanning.vcxproj
-pathPlanning.vcxproj.filters
-pathPlanning.vcxproj.user
-x64/Debug/pathPlanning.exp
+Eigen.natvisx64/Debug/pathPlanning.exp
 x64/Debug/pathPlanning.ilk
 x64/Debug/pathPlanning.log
 x64/Debug/pathPlanning.pdb
@@ -57,3 +52,5 @@ x64/Debug/vc141.pdb
 x64/Debug/vcpkg.applocal.log
 x64/Debug/pathPlanning.tlog/unsuccessfulbuild
 *.log
+x64/Debug/pathPlanning.exp
+Eigen.natvis
