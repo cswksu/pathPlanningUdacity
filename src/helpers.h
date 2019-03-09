@@ -155,4 +155,50 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s,
   return { x,y };
 }
 
+vector<double> rotateCW(double x, double y, double theta) {
+  double xprime = x * cos(theta) + y * sin(theta);
+  double yprime = -x * sin(theta) + y * cos(theta);
+
+  return { xprime, yprime };
+}
+
+vector<double> rotateCCW(double x, double y, double theta) {
+  double xprime = x * cos(theta) - y * sin(theta);
+  double yprime = x * sin(theta) + y * cos(theta);
+
+  return {xprime, yprime};
+}
+
+double speedCalc(double x1, double y1, double x0, double y0, double ts) {
+  return sqrt(pow(x1 - x0, 2) + pow(y1 - y0, 2)) / ts;
+}
+
+// Return speed, vx, vy, theta given (x1, y1), (x0, y0), and timestep.
+vector<double> kinematics(double x1, double y1, double x0, double y0, double ts) {
+  double vx = (x1 - x0) / ts;
+  double vy = (y1 - y0) / ts;
+  double speed = sqrt(vx*vx + vy * vy);
+  double theta = atan2(y1 - y0, x1 - x0);
+  return { speed, vx, vy, theta };
+}
+
+// Return speed, vx, vy, theta, last speed, accT
+vector<double> kinematics(double x2, double y2, double x1, double y1, double x0, double y0, double ts) {
+  double vx = (x2 - x1) / ts;
+  double vy = (y2 - y1) / ts;
+  double speed = sqrt(vx*vx + vy * vy);
+  double theta = atan2(y2 - y1, x2 - x1);
+
+  double vx0 = (x1 - x0) / ts;
+  double vy0 = (y1 - y0) / ts;
+  double speed0 = sqrt(vx0*vx0 + vy0 * vy0);
+  //double acc = sqrt(pow(vx - vx0, 2) + pow(vy - vy0, 2))/ts;
+  double accT = (speed - speed0) / ts;
+  //double accN = sqrt(pow(acc, 2) - pow(accT, 2));
+
+  return { speed, vx, vy, theta, speed0, accT };
+}
+
+
+
 #endif  // HELPERS_H

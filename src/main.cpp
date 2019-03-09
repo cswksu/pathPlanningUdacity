@@ -163,8 +163,8 @@ int main() {
           auto previous_path_x = j[1]["previous_path_x"];
           auto previous_path_y = j[1]["previous_path_y"];
           // Previous path's end s and d values 
-          double end_path_s = j[1]["end_path_s"];
-          double end_path_d = j[1]["end_path_d"];
+          //double end_path_s = j[1]["end_path_s"];
+          //double end_path_d = j[1]["end_path_d"];
 
           // Sensor Fusion Data, a list of all other cars on the same side 
           //   of the road.
@@ -180,7 +180,7 @@ int main() {
            */
 
           
-          int lane = (car_d-2.0)/4;
+          
           //std::cout << "received data" << std::endl;
           int prevPathSize=previous_path_x.size();
           double pos_x;
@@ -191,21 +191,23 @@ int main() {
           double prev_pos_y;
           double prev_prev_pos_x;
           double prev_prev_pos_y;
-          double prev3_pos_x;
-          double prev3_pos_y;
+          //double prev3_pos_x;
+          //double prev3_pos_y;
           double theta;
-          double acc_x;
-          double acc_y;
-          double v_x;
-          double v_y;
-          double speed;
-          double acc;
+          //double acc_x;
+          //double acc_y;
+          double v_x=0;
+          double v_y=0;
+          double speed=0;
+          double acc_tan=0;
+          //double acc;
           
-          double rCurve;
-          double jerk_x=0;
-          double jerk_y=0;
-          double jerk=0;
+          //double rCurve;
+          //double jerk_x=0;
+          //double jerk_y=0;
+          //double jerk=0;
           double lastSpeed = 0;
+          double ts = 0.02;
 
           prevPathSize=std::min(prevPathSize,15);
           for (int i =0; i < prevPathSize; ++i) {
@@ -215,65 +217,82 @@ int main() {
           
           if (prevPathSize==0) {
             pos_x = car_x;
-            std::cout<<"car's initial x position: " << pos_x<<std::endl;
+            //std::cout<<"car's initial x position: " << pos_x<<std::endl;
             pos_y = car_y;
-            std::cout<<"car's initial y position: " << pos_y<<std::endl;
+            //std::cout<<"car's initial y position: " << pos_y<<std::endl;
             theta=deg2rad(car_yaw);
             pos_s=car_s;
             pos_d=car_d;
-            acc_x=0;
-            acc_y=0;
-            v_x=car_speed*cos(theta);
-            v_y=car_speed*sin(theta);
-            acc = 0;
-            rCurve = 9999;
+            //acc_x=0;
+            //acc_y=0;
+            //v_x=car_speed*cos(theta);
+            //v_y=car_speed*sin(theta);
+            //acc = 0;
+            //rCurve = 9999;
             speed = car_speed;
-          } else {
-            acc=0;
-            speed=0;
-            pos_x = previous_path_x[prevPathSize-1];
-            pos_y = previous_path_y[prevPathSize-1];
-            theta=deg2rad(car_yaw);
-            if (prevPathSize>1) {
-              
-              prev_pos_x = previous_path_x[prevPathSize-2];
-              prev_pos_y = previous_path_y[prevPathSize-2];
-              v_x=(pos_x-prev_pos_x)/0.02;
-              v_y=(pos_y-prev_pos_y)/0.02;
-              theta = atan2(pos_y-prev_pos_y,pos_x-prev_pos_x);
-              speed = sqrt(v_x*v_x + v_y * v_y);
-              lastSpeed = speed;
-              rCurve = 9999;
-              if (prevPathSize>2) {
-                prev_prev_pos_x=previous_path_x[prevPathSize-3];
-                prev_prev_pos_y=previous_path_y[prevPathSize-3];
-                acc_x=(pos_x-2*prev_pos_x+prev_prev_pos_x)/(0.02*0.02);
-                acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
-                acc = sqrt(acc_x*acc_x+acc_y*acc_y);
-                lastSpeed=sqrt(pow(prev_pos_x-prev_prev_pos_x,2)+pow(prev_pos_y-prev_prev_pos_y,2))/0.02;
-                rCurve = abs(pow(speed, 3) / (v_x*acc_y - v_y * acc_x));
-                if (prevPathSize > 3) {
-                  prev3_pos_x= previous_path_x[prevPathSize - 4];
-                  prev3_pos_y = previous_path_y[prevPathSize - 4];
-                  jerk_x = -pos_x + 3 * prev_pos_x - 3 * prev_prev_pos_x + prev3_pos_x;
-                  jerk_y = -pos_y + 3 * prev_pos_y - 3 * prev_prev_pos_y + prev3_pos_y;
-                  jerk = sqrt(jerk_x*jerk_x + jerk_y * jerk_y);
-                }
-              }
-              
-            }
+            pos_s = car_s;
+            pos_d = car_d;
+          } else if (prevPathSize == 1) {
+            //acc = 0;
+            speed = car_speed;
+            theta = deg2rad(car_yaw);
+            pos_x = previous_path_x[0];
+            pos_y = previous_path_y[0];
+            pos_s = car_s;
+            pos_d = car_d;
+          } else if (prevPathSize == 2) {
+            pos_x= previous_path_x[prevPathSize - 1];
+            pos_y = previous_path_y[prevPathSize - 1];
             
-            vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
-            pos_s=frenetPos[0];
-            pos_d=frenetPos[1];
+            prev_pos_x = previous_path_x[prevPathSize - 2];
+            prev_pos_y = previous_path_y[prevPathSize - 2];
+            vector<double> kine2p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, ts);
+            speed = kine2p[0];
+            
+            v_x = kine2p[1];
+            v_y = kine2p[2];
+            theta = kine2p[3];
+            pos_s = car_s;
+            pos_d = car_d;
+          } else {
+            pos_x = previous_path_x[prevPathSize - 1];
+            pos_y = previous_path_y[prevPathSize - 1];
+
+            prev_pos_x = previous_path_x[prevPathSize - 2];
+            prev_pos_y = previous_path_y[prevPathSize - 2];
+            prev_prev_pos_x = previous_path_x[prevPathSize - 3];
+            prev_prev_pos_y = previous_path_y[prevPathSize - 3];
+            vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev_prev_pos_x, prev_prev_pos_y, ts);
+            //acc_x = (pos_x - 2 * prev_pos_x + prev_prev_pos_x) / (0.02*0.02);
+            //acc_y = (pos_y - 2 * prev_pos_y + prev_prev_pos_y) / (0.02*0.02);
+            //acc = sqrt(acc_x*acc_x + acc_y * acc_y);
+            //lastSpeed = sqrt(pow(prev_pos_x - prev_prev_pos_x, 2) + pow(prev_pos_y - prev_prev_pos_y, 2)) / 0.02;
+            //rCurve = abs(pow(speed, 3) / (v_x*acc_y - v_y * acc_x));
+            speed = kine3p[0];
+            theta = kine3p[3];
+            lastSpeed = kine3p[4];
+            acc_tan = kine3p[5];
+
+
+            if (prevPathSize == 15) {
+              vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
+              pos_s = frenetPos[0];
+              pos_d = frenetPos[1];
+            } else {
+              pos_s = car_s;
+              pos_d = car_d;
+            }
           }
+            
+            
+          int lane = (pos_d - 2.0) / 4;
           
-          double car_ahead_speed=999;
+          /*double car_ahead_speed=999;
           double car_ahead_dist=999;
           double sf_s;
           double sf_d;
           double sf_vx;
-          double sf_vy;
+          double sf_vy;*/
           double tempSpeed;
           /*
           for (int i=0; i<sensor_fusion.size(); ++i) {
@@ -323,8 +342,9 @@ int main() {
           double thetaRotCW=atan2(yPath[projSteps-1]-yPath[0],xPath[projSteps-1]-xPath[0]);
           vector<double> xTransPath(projSteps), yTransPath(projSteps);
           for (int i=0; i < projSteps; ++i) {
-            xTransPath[i]=xPath[i]*cos(thetaRotCW)+yPath[i]*sin(thetaRotCW);
-            yTransPath[i]=-xPath[i]*sin(thetaRotCW)+yPath[i]*cos(thetaRotCW);
+            vector<double> cwRot = rotateCW(xPath[i], yPath[i], thetaRotCW);
+            xTransPath[i] = cwRot[0];
+            yTransPath[i]= cwRot[1];
             if (i > 0) {
               if (xTransPath[i]<=xTransPath[i-1]) {
                 std::cout << "non-sorted" << std::endl;
@@ -338,8 +358,8 @@ int main() {
           s.set_points(xTransPath,yTransPath);
           std::cout<<"incoming speed: " << speed <<std::endl;
           for (int i =0; i < 50 - prevPathSize; ++i) {
-            double acc_cent = pow(speed, 2) / rCurve;
-            double acc_tan = (speed - lastSpeed)/0.02;
+            //double acc_cent = pow(speed, 2) / rCurve;
+            //double acc_tan = (speed - lastSpeed)/0.02;
             std::cout << "tangential acceleration incoming: " << acc_tan <<std::endl;
             bool underspeed = (speed < min_speed);
             bool overspeed = (speed > max_speed);
@@ -370,7 +390,7 @@ int main() {
               }
             }
             //speed = 22;
-            speed = std::min(speed, max_speed);
+            //speed = std::min(speed, max_speed);
             if (speed < 0) {
               std::cout<<"negative speed"<<std::endl;
             }
@@ -382,10 +402,10 @@ int main() {
               std::cout << "overspeed warning" << std::endl;
             }*/
             
-            double allowableDiff=0.01;
+            double allowableDiff=0.02;
             double tempX=pos_x_trans+speed*0.02;
             double tempY=s(tempX);
-            double tempSpeed=sqrt(pow(tempX-pos_x_trans,2)+pow(tempY-pos_y_trans,2))/0.02;
+            double tempSpeed=speedCalc(tempX, tempY, pos_x_trans,pos_y_trans,ts);
             //std::cout << "finding trajectory" << std::endl;
             bool lastOverspeed = true;
             double incrementer = 0.01;
@@ -411,11 +431,13 @@ int main() {
               }
               //std::cout << tempX << std::endl;
               tempY=s(tempX);
-              tempSpeed=sqrt(pow(tempX-pos_x_trans,2)+pow(tempY-pos_y_trans,2))/0.02;
+              tempSpeed = speedCalc(tempX, tempY, pos_x_trans, pos_y_trans, ts);
               
 
 
             }
+            double overageFactor = speed / tempSpeed;
+            
             //std::cout << "temp speed used: " << tempSpeed <<std::endl;
             //std::cout << "trajectory found" << std::endl;
             /*
@@ -423,15 +445,16 @@ int main() {
             double deltaXRot=speed*0.02*cos(transHdg);
             pos_x_trans+=deltaXRot;
             pos_y_trans=s(pos_x_trans);*/
-            double deltaX = tempX-pos_x_trans;
-            double deltaY = tempY-pos_y_trans;
+            double deltaX = (tempX-pos_x_trans)*overageFactor;
+            double deltaY = (tempY-pos_y_trans)*overageFactor;
             pos_x_trans=tempX;
             pos_y_trans=tempY;
-            double oldPos_x=pos_x;
-            double oldPos_y=pos_y;
-            pos_x+=deltaX*cos(-thetaRotCW)+deltaY*sin(-thetaRotCW);
+            prev_pos_x=pos_x;
+            prev_pos_y=pos_y;
+            vector<double> rotCCW = rotateCCW(deltaX, deltaY, thetaRotCW);
+            pos_x += rotCCW[0];
             //std::cout << "car's new x position: " << pos_x << std::endl;
-            pos_y+= -deltaX*sin(-thetaRotCW)+deltaY*cos(-thetaRotCW);
+            pos_y+= rotCCW[1];
             //std::cout << "car's new y position: " << pos_y << std::endl;
             
             /**pos_s+=speed*0.02;
@@ -456,34 +479,40 @@ int main() {
             }*/
             next_x_vals.push_back(pos_x);
             next_y_vals.push_back(pos_y);
-            prev_pos_x = oldPos_x;
-            prev_pos_y = oldPos_y;
-            theta = atan2(pos_y-prev_pos_y,pos_x-prev_pos_x);
-            vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
-            pos_s=frenetPos[0];
-            pos_d=frenetPos[1];
-            lastSpeed = sqrt(v_x*v_x+v_y*v_y);
-            v_x=(pos_x-prev_pos_x)/0.02;
-            v_y=(pos_y-prev_pos_y)/0.02;
-            speed = sqrt(v_x*v_x + v_y * v_y);
-            std::cout << "speed post-calculated: " << speed << std::endl;
-            if (next_x_vals.size()>2) {
+            if (next_x_vals.size() < 3) {
+              //prev_pos_x = oldPos_x;
+              //prev_pos_y = oldPos_y;
+              vector<double> kine2p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, ts);
+              speed = kine2p[0];
+
+              theta = kine2p[3];
+              vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
+              pos_s = frenetPos[0];
+              pos_d = frenetPos[1];
+              lastSpeed = speed-acc_tan;
+              std::cout << "speed post-calculated: " << speed << std::endl;
+            } else {
               prev_prev_pos_x=next_x_vals[next_x_vals.size()-3];
               prev_prev_pos_y=next_y_vals[next_y_vals.size()-3];
-              acc_x=(pos_x-2*prev_pos_x+prev_prev_pos_x)/(0.02*0.02);
-              acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
-              rCurve = abs(pow(speed, 3) / (v_x*acc_y - v_y * acc_x));
-              lastSpeed = sqrt(pow(prev_pos_x - prev_prev_pos_x, 2) + pow(prev_pos_y - prev_prev_pos_y, 2))/0.02;
-              if (next_x_vals.size() > 3) {
-                prev3_pos_x = next_x_vals[next_x_vals.size() - 4];
-                prev3_pos_y = next_y_vals[next_x_vals.size() - 4];
-                jerk_x = -pos_x + 3 * prev_pos_x - 3 * prev_prev_pos_x + prev3_pos_x;
-                jerk_y = -pos_y + 3 * prev_pos_y - 3 * prev_prev_pos_y + prev3_pos_y;
-                jerk = sqrt(jerk_x*jerk_x + jerk_y * jerk_y);
-              }
+              vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev_prev_pos_x, prev_prev_pos_y, ts);
+              // Return speed, vx, vy, theta, last speed, accT
+              speed = kine3p[0];
+              theta = kine3p[3];
+              lastSpeed = kine3p[4];
+              acc_tan = kine3p[5];
+              //acc_x=(pos_x-2*prev_pos_x+prev_prev_pos_x)/(0.02*0.02);
+              //acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
+              //rCurve = abs(pow(speed, 3) / (v_x*acc_y - v_y * acc_x));
+              //if (next_x_vals.size() > 3) {
+                //prev3_pos_x = next_x_vals[next_x_vals.size() - 4];
+                //prev3_pos_y = next_y_vals[next_x_vals.size() - 4];
+                //jerk_x = -pos_x + 3 * prev_pos_x - 3 * prev_prev_pos_x + prev3_pos_x;
+                //jerk_y = -pos_y + 3 * prev_pos_y - 3 * prev_prev_pos_y + prev3_pos_y;
+                //jerk = sqrt(jerk_x*jerk_x + jerk_y * jerk_y);
+              //}
             }
             
-            acc = sqrt(acc_x*acc_x+acc_y*acc_y);
+            //acc = sqrt(acc_x*acc_x+acc_y*acc_y);
           }
           
           

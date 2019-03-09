@@ -54,3 +54,4 @@ x64/Debug/pathPlanning.tlog/unsuccessfulbuild
 *.log
 x64/Debug/pathPlanning.exp
 Eigen.natvis
+.vs/pathPlanning/v15/ipch/AutoPCH/f457aa4f3d410e26/MAIN.ipch
