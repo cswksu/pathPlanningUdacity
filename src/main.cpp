@@ -191,21 +191,9 @@ int main() {
           double prev_pos_y;
           double prev_prev_pos_x;
           double prev_prev_pos_y;
-          //double prev3_pos_x;
-          //double prev3_pos_y;
           double theta;
-          //double acc_x;
-          //double acc_y;
-          double v_x=0;
-          double v_y=0;
           double speed=0;
           double acc_tan=0;
-          //double acc;
-          
-          //double rCurve;
-          //double jerk_x=0;
-          //double jerk_y=0;
-          //double jerk=0;
           double lastSpeed = 0;
           double ts = 0.02;
 
@@ -217,23 +205,14 @@ int main() {
           
           if (prevPathSize==0) {
             pos_x = car_x;
-            //std::cout<<"car's initial x position: " << pos_x<<std::endl;
             pos_y = car_y;
-            //std::cout<<"car's initial y position: " << pos_y<<std::endl;
             theta=deg2rad(car_yaw);
             pos_s=car_s;
             pos_d=car_d;
-            //acc_x=0;
-            //acc_y=0;
-            //v_x=car_speed*cos(theta);
-            //v_y=car_speed*sin(theta);
-            //acc = 0;
-            //rCurve = 9999;
             speed = car_speed;
             pos_s = car_s;
             pos_d = car_d;
           } else if (prevPathSize == 1) {
-            //acc = 0;
             speed = car_speed;
             theta = deg2rad(car_yaw);
             pos_x = previous_path_x[0];
@@ -248,10 +227,7 @@ int main() {
             prev_pos_y = previous_path_y[prevPathSize - 2];
             vector<double> kine2p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, ts);
             speed = kine2p[0];
-            
-            v_x = kine2p[1];
-            v_y = kine2p[2];
-            theta = kine2p[3];
+            theta = kine2p[1];
             pos_s = car_s;
             pos_d = car_d;
           } else {
@@ -263,15 +239,10 @@ int main() {
             prev_prev_pos_x = previous_path_x[prevPathSize - 3];
             prev_prev_pos_y = previous_path_y[prevPathSize - 3];
             vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev_prev_pos_x, prev_prev_pos_y, ts);
-            //acc_x = (pos_x - 2 * prev_pos_x + prev_prev_pos_x) / (0.02*0.02);
-            //acc_y = (pos_y - 2 * prev_pos_y + prev_prev_pos_y) / (0.02*0.02);
-            //acc = sqrt(acc_x*acc_x + acc_y * acc_y);
-            //lastSpeed = sqrt(pow(prev_pos_x - prev_prev_pos_x, 2) + pow(prev_pos_y - prev_prev_pos_y, 2)) / 0.02;
-            //rCurve = abs(pow(speed, 3) / (v_x*acc_y - v_y * acc_x));
             speed = kine3p[0];
-            theta = kine3p[3];
-            lastSpeed = kine3p[4];
-            acc_tan = kine3p[5];
+            theta = kine3p[1];
+            lastSpeed = kine3p[2];
+            acc_tan = kine3p[3];
 
 
             if (prevPathSize == 15) {
@@ -324,7 +295,7 @@ int main() {
           } */
 
           int numSteps=30;
-          int projSteps = 5;//std::max(3,(50-prevPathSize)/numSteps);
+          int projSteps = 5;
           vector<double> xPath(projSteps), yPath(projSteps);
           double tempS=pos_s;
           double tempD= 6.0;
@@ -339,7 +310,7 @@ int main() {
             yPath[i]=xyTemp[1]-yOffset;
             
           }
-          double thetaRotCW=atan2(yPath[projSteps-1]-yPath[0],xPath[projSteps-1]-xPath[0]);
+          double thetaRotCW=atan2(yPath[projSteps-1],xPath[projSteps-1]);
           vector<double> xTransPath(projSteps), yTransPath(projSteps);
           for (int i=0; i < projSteps; ++i) {
             vector<double> cwRot = rotateCW(xPath[i], yPath[i], thetaRotCW);
@@ -358,8 +329,6 @@ int main() {
           s.set_points(xTransPath,yTransPath);
           std::cout<<"incoming speed: " << speed <<std::endl;
           for (int i =0; i < 50 - prevPathSize; ++i) {
-            //double acc_cent = pow(speed, 2) / rCurve;
-            //double acc_tan = (speed - lastSpeed)/0.02;
             std::cout << "tangential acceleration incoming: " << acc_tan <<std::endl;
             bool underspeed = (speed < min_speed);
             bool overspeed = (speed > max_speed);
@@ -367,52 +336,40 @@ int main() {
             bool coastDown = (acc_tan >= sqrt(abs(14.0*(min_speed - speed))));
             if (underspeed) {
               if ((!overAcc) && (!coastDown)) {
-                acc_tan = std::min(5.0, acc_tan + 0.02*5.0);
+                acc_tan = std::min(5.0, acc_tan + ts*5.0);
                 std::cout << "jerk up" << std::endl;
               } else if (overAcc) {
                 acc_tan = 5.0;
                 std::cout << "overaccelerating, capped" << std::endl;
               } else if (coastDown) {
-                acc_tan =std::max(-7.0, acc_tan-7.0 * 0.02);
+                acc_tan =std::max(-7.0, acc_tan-7.0 * ts);
                 std::cout << "jerk down" << std::endl;
               }
             } else if (overspeed ) {
               if (overAcc) {
                 acc_tan = 5.0;
               }
-              acc_tan =std::max(-7.0,acc_tan-8.0*0.02);
+              acc_tan =std::max(-7.0,acc_tan-8.0*ts);
               std::cout << "brake" << std::endl;
-              //speed = max_speed;
             } else {
               if (coastDown) {
-                acc_tan = std::max(-7.0, acc_tan - 7.0 * 0.02);
+                acc_tan = std::max(-7.0, acc_tan - 7.0 * ts);
                 std::cout << "jerk down" << std::endl;
               }
             }
-            //speed = 22;
-            //speed = std::min(speed, max_speed);
             if (speed < 0) {
               std::cout<<"negative speed"<<std::endl;
             }
             std::cout<< "tangential acceleration out: " <<acc_tan <<std::endl;
-            speed += acc_tan * 0.02;
-            //std::cout << "speed requested: " << speed <<std::endl;
-            /*else if (speed > max_speed) {
-              speed = max_speed;
-              std::cout << "overspeed warning" << std::endl;
-            }*/
+            speed += acc_tan * ts;
             
             double allowableDiff=0.02;
-            double tempX=pos_x_trans+speed*0.02;
+            double tempX=pos_x_trans+speed*ts;
             double tempY=s(tempX);
             double tempSpeed=speedCalc(tempX, tempY, pos_x_trans,pos_y_trans,ts);
-            //std::cout << "finding trajectory" << std::endl;
             bool lastOverspeed = true;
             double incrementer = 0.01;
             while(abs(tempSpeed-speed)>allowableDiff) {
-              /*std::cout << "Temp Speed: " << tempSpeed << std::endl;
-              std::cout << "Targ Speed: " << speed << std::endl;
-              std::cout << "Difference: " << abs(tempSpeed - speed) << std::endl;*/
               if (tempSpeed-speed>0) {
                 if (!lastOverspeed) {
                   incrementer *= 0.5;
@@ -429,7 +386,6 @@ int main() {
                 lastOverspeed = false;
                 
               }
-              //std::cout << tempX << std::endl;
               tempY=s(tempX);
               tempSpeed = speedCalc(tempX, tempY, pos_x_trans, pos_y_trans, ts);
               
@@ -437,82 +393,40 @@ int main() {
 
             }
             double overageFactor = speed / tempSpeed;
-            
-            //std::cout << "temp speed used: " << tempSpeed <<std::endl;
-            //std::cout << "trajectory found" << std::endl;
-            /*
-            double transHdg=atan2(s(pos_x_trans+1.0)-pos_y_trans,1.0);
-            double deltaXRot=speed*0.02*cos(transHdg);
-            pos_x_trans+=deltaXRot;
-            pos_y_trans=s(pos_x_trans);*/
             double deltaX = (tempX-pos_x_trans)*overageFactor;
             double deltaY = (tempY-pos_y_trans)*overageFactor;
-            pos_x_trans=tempX;
-            pos_y_trans=tempY;
             prev_pos_x=pos_x;
             prev_pos_y=pos_y;
             vector<double> rotCCW = rotateCCW(deltaX, deltaY, thetaRotCW);
-            pos_x += rotCCW[0];
-            //std::cout << "car's new x position: " << pos_x << std::endl;
-            pos_y+= rotCCW[1];
-            //std::cout << "car's new y position: " << pos_y << std::endl;
-            
-            /**pos_s+=speed*0.02;
-            pos_d = 6.0;
-            vector<double> xyTemp= getXY(pos_s, pos_d,map_waypoints_s, map_waypoints_x, map_waypoints_y);
-            
-            pos_x=xyTemp[0];
-            pos_y=xyTemp[1];
-            double rotPos_x=pos_x*cos(thetaRotCW)+pos_y*sin(thetaRotCW);
-            double rotPos_y=s(rotPos_x);
-            pos_y= -rotPos_x*sin(-thetaRotCW)+rotPos_y*cos(-thetaRotCW);
-            **/
-            /*double speedCheck = sqrt(std::pow((pos_x-oldPos_x)/0.02,2)+std::pow((pos_y-oldPos_y)/0.02,2));
-            if (speedCheck > max_speed) {
-              
-              double overageRatio=speedCheck/max_speed;
-              std::cout << "overspeed: " << overageRatio << std::endl;
-              pos_x=oldPos_x+(pos_x-oldPos_x)/overageRatio;
-              pos_y=oldPos_y+(pos_y-oldPos_y)/overageRatio;
-              pos_x_trans=pos_x*cos(thetaRotCW)+pos_y*sin(thetaRotCW);
-              pos_y_trans=-pos_x*sin(thetaRotCW)+pos_y*cos(thetaRotCW);
-            }*/
+            pos_x = rotCCW[0]+xOffset+pos_x_trans;
+            pos_y= rotCCW[1]+yOffset+pos_y_trans;
+            pos_x_trans+=deltaX;
+            pos_y_trans+=deltaY;
             next_x_vals.push_back(pos_x);
             next_y_vals.push_back(pos_y);
             if (next_x_vals.size() < 3) {
-              //prev_pos_x = oldPos_x;
-              //prev_pos_y = oldPos_y;
               vector<double> kine2p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, ts);
               speed = kine2p[0];
 
-              theta = kine2p[3];
+              theta = kine2p[1];
               vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
               pos_s = frenetPos[0];
               pos_d = frenetPos[1];
-              lastSpeed = speed-acc_tan;
+              lastSpeed = speed-acc_tan*ts;
               std::cout << "speed post-calculated: " << speed << std::endl;
             } else {
               prev_prev_pos_x=next_x_vals[next_x_vals.size()-3];
               prev_prev_pos_y=next_y_vals[next_y_vals.size()-3];
               vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev_prev_pos_x, prev_prev_pos_y, ts);
-              // Return speed, vx, vy, theta, last speed, accT
+              
               speed = kine3p[0];
-              theta = kine3p[3];
-              lastSpeed = kine3p[4];
-              acc_tan = kine3p[5];
-              //acc_x=(pos_x-2*prev_pos_x+prev_prev_pos_x)/(0.02*0.02);
-              //acc_y=(pos_y-2*prev_pos_y+prev_prev_pos_y)/(0.02*0.02);
-              //rCurve = abs(pow(speed, 3) / (v_x*acc_y - v_y * acc_x));
-              //if (next_x_vals.size() > 3) {
-                //prev3_pos_x = next_x_vals[next_x_vals.size() - 4];
-                //prev3_pos_y = next_y_vals[next_x_vals.size() - 4];
-                //jerk_x = -pos_x + 3 * prev_pos_x - 3 * prev_prev_pos_x + prev3_pos_x;
-                //jerk_y = -pos_y + 3 * prev_pos_y - 3 * prev_prev_pos_y + prev3_pos_y;
-                //jerk = sqrt(jerk_x*jerk_x + jerk_y * jerk_y);
-              //}
+              theta = kine3p[1];
+              lastSpeed = kine3p[2];
+              acc_tan = kine3p[3];
             }
-            
-            //acc = sqrt(acc_x*acc_x+acc_y*acc_y);
+            vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
+            pos_s = frenetPos[0];
+            pos_d = frenetPos[1];
           }
           
           
