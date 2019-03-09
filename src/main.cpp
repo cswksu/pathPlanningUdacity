@@ -198,6 +198,7 @@ int main() {
           double ts = 0.02;
 
           prevPathSize=std::min(prevPathSize,15);
+          std::cout << "Previous path size: " << prevPathSize << std::endl;
           for (int i =0; i < prevPathSize; ++i) {
             next_x_vals.push_back(previous_path_x[i]);
             next_y_vals.push_back(previous_path_y[i]);
@@ -298,12 +299,14 @@ int main() {
           int projSteps = 5;
           vector<double> xPath(projSteps), yPath(projSteps);
           double tempS=pos_s;
-          double tempD= 6.0;
+          double tempD= pos_d;
           vector<double> xyTemp= getXY(tempS, tempD,map_waypoints_s, map_waypoints_x, map_waypoints_y);
           double xOffset=xyTemp[0];
           double yOffset=xyTemp[1];
-          for (int i=0; i < projSteps; ++i) {
-            double tempS=pos_s+i*(speed+5)*numSteps*0.02;
+          xPath[0] = 0;
+          yPath[0] = 0;
+          for (int i=1; i < projSteps; ++i) {
+            double tempS=pos_s+i*(speed+5)*numSteps*ts;
             double tempD= 6.0;
             vector<double> xyTemp= getXY(tempS, tempD,map_waypoints_s, map_waypoints_x, map_waypoints_y);
             xPath[i]=xyTemp[0]-xOffset;
@@ -312,17 +315,18 @@ int main() {
           }
           double thetaRotCW=atan2(yPath[projSteps-1],xPath[projSteps-1]);
           vector<double> xTransPath(projSteps), yTransPath(projSteps);
-          for (int i=0; i < projSteps; ++i) {
+          xTransPath[0] = 0;
+          yTransPath[0] = 0;
+          for (int i=1; i < projSteps; ++i) {
             vector<double> cwRot = rotateCW(xPath[i], yPath[i], thetaRotCW);
             xTransPath[i] = cwRot[0];
             yTransPath[i]= cwRot[1];
-            if (i > 0) {
-              if (xTransPath[i]<=xTransPath[i-1]) {
-                std::cout << "non-sorted" << std::endl;
-              }
-              
+            if (xTransPath[i]<=xTransPath[i-1]) {
+              std::cout << "non-sorted" << std::endl;
             }
+              
           }
+          
           double pos_x_trans=0;
           double pos_y_trans=0;
           tk::spline s;
@@ -362,13 +366,13 @@ int main() {
             }
             std::cout<< "tangential acceleration out: " <<acc_tan <<std::endl;
             speed += acc_tan * ts;
-            
+            std::cout << "speed out: " << speed << std::endl;
             double allowableDiff=0.02;
             double tempX=pos_x_trans+speed*ts;
             double tempY=s(tempX);
             double tempSpeed=speedCalc(tempX, tempY, pos_x_trans,pos_y_trans,ts);
             bool lastOverspeed = true;
-            double incrementer = 0.01;
+            double incrementer = (speed-tempSpeed)*ts*0.5;
             while(abs(tempSpeed-speed)>allowableDiff) {
               if (tempSpeed-speed>0) {
                 if (!lastOverspeed) {
@@ -397,9 +401,11 @@ int main() {
             double deltaY = (tempY-pos_y_trans)*overageFactor;
             prev_pos_x=pos_x;
             prev_pos_y=pos_y;
-            vector<double> rotCCW = rotateCCW(deltaX, deltaY, thetaRotCW);
-            pos_x = rotCCW[0]+xOffset+pos_x_trans;
-            pos_y= rotCCW[1]+yOffset+pos_y_trans;
+            double arg1 = deltaX + pos_x_trans;
+            double arg2 = deltaY + pos_y_trans;
+            vector<double> rotCCW = rotateCCW(arg1, arg2, thetaRotCW);
+            pos_x = rotCCW[0]+xOffset;
+            pos_y= rotCCW[1]+yOffset;
             pos_x_trans+=deltaX;
             pos_y_trans+=deltaY;
             next_x_vals.push_back(pos_x);
@@ -423,6 +429,7 @@ int main() {
               theta = kine3p[1];
               lastSpeed = kine3p[2];
               acc_tan = kine3p[3];
+              std::cout << "speed post-calculated: " << speed << std::endl;
             }
             vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
             pos_s = frenetPos[0];
