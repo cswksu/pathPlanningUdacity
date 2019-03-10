@@ -372,7 +372,7 @@ int main() {
             double tempY=s(tempX);
             double tempSpeed=speedCalc(tempX, tempY, pos_x_trans,pos_y_trans,ts);
             bool lastOverspeed = true;
-            double incrementer = (speed-tempSpeed)*ts*0.5;
+            double incrementer = 0.01;
             while(abs(tempSpeed-speed)>allowableDiff) {
               if (tempSpeed-speed>0) {
                 if (!lastOverspeed) {
