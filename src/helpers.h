@@ -230,8 +230,8 @@ vector<double> kinematics(double& x4, double& y4, double& x3, double& y3, double
 
 
 vector<double> kinematics(double& x5, double& y5, double& x4, double& y4, double& x3, double& y3, double& x2, double& y2, double& x1, double& y1, double& x0, double& y0, double& ts) {
-  double vx=(1.0/60.0)*(137.0*x6-300.0*x4+300.0*x3-200.0*x2+75.0*x1-12.0*x0)/ts;
-  double vy=(1.0/60.0)*(137.0*y6-300.0*y4+300.0*y3-200.0*y2+75.0*y1-12.0*y0)/ts;
+  double vx=(1.0/60.0)*(137.0*x5-300.0*x4+300.0*x3-200.0*x2+75.0*x1-12.0*x0)/ts;
+  double vy=(1.0/60.0)*(137.0*y5-300.0*y4+300.0*y3-200.0*y2+75.0*y1-12.0*y0)/ts;
   double theta = atan2(vy, vx);
   double speed4 = sqrt(vx*vx+vy*vy);
   vx=(1.0/60.0)*(12.0*x6+65.0*x4-120.0*x3+60.0*x2-20.0*x1+3.0*x0)/ts;
