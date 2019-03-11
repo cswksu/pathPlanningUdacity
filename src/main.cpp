@@ -146,7 +146,7 @@ int main() {
         
         if (event == "telemetry") {
           // j[1] is the data JSON object
-          std::cout<<"msg received"<<std::endl;
+          std::cout<<"*******msg received*******"<<std::endl;
           // Main car's localization Data
           double car_x = j[1]["x"];
           double car_y = j[1]["y"];
@@ -255,10 +255,11 @@ int main() {
               pos_d = car_d;
             }
           }
+          std::cout << "x: " << pos_x << " y: " << pos_y << std::endl;
             
             
-          int lane = (pos_d - 2.0) / 4;
-          
+          int lane = round((pos_d - 2.0) / 4.0);
+          /*
           double lane1AheadDist = 999;
           double lane2AheadDist = 999;
           double lane3AheadDist = 999;
@@ -350,23 +351,25 @@ int main() {
           }
           else {
             ref_speed = 45.0 * maxDistTravel;
-          }
+            std::cout << "car ahead no slowdown: speed = " << car_ahead_speed << std::endl;
 
+          }
+          
           max_speed = ref_speed + 2.0*maxDistTravel;
-          min_speed = ref_speed - 2.0*maxDistTravel;
-          int numSteps=30;
+          min_speed = ref_speed - 2.0*maxDistTravel;*/
+          int numSteps=20;
           int projSteps = 5;
           vector<double> xPath(projSteps), yPath(projSteps);
-          double tempS=pos_s;
-          double tempD= pos_d;
-          vector<double> xyTemp= getXY(tempS, tempD,map_waypoints_s, map_waypoints_x, map_waypoints_y);
-          double xOffset=xyTemp[0];
-          double yOffset=xyTemp[1];
+          //double tempS=pos_s;
+          //double tempD= pos_d;
+          //vector<double> xyTemp= getXY(tempS, tempD,map_waypoints_s, map_waypoints_x, map_waypoints_y);
+          double xOffset=pos_x;
+          double yOffset=pos_y;
           xPath[0] = 0;
           yPath[0] = 0;
           for (int i=1; i < projSteps; ++i) {
             double tempS=pos_s+i*(speed+5)*numSteps*ts;
-            double tempD= 6.0;
+            double tempD= pos_d+i/(projSteps-1.0)*(lane*4.0+2.0-pos_d);
             vector<double> xyTemp= getXY(tempS, tempD,map_waypoints_s, map_waypoints_x, map_waypoints_y);
             xPath[i]=xyTemp[0]-xOffset;
             yPath[i]=xyTemp[1]-yOffset;
@@ -393,40 +396,64 @@ int main() {
           std::cout<<"incoming speed: " << speed <<std::endl;
           for (int i =0; i < 50 - prevPathSize; ++i) {
             std::cout << "tangential acceleration incoming: " << acc_tan <<std::endl;
-            bool underspeed = (speed < min_speed);
-            bool overspeed = (speed > max_speed);
+            bool underspeed = (speed <= min_speed);
+            bool overspeed = (speed >= max_speed);
             bool overAcc = (acc_tan > 5.0);
-            bool coastDown = (acc_tan >= sqrt(14.0*(speed-ref_speed)));
+            bool coastDown = (acc_tan >= sqrt(14.0*(abs(speed-ref_speed))));
+            bool coastUp = (-acc_tan >= sqrt(6.0 * abs(speed - ref_speed)));
             if (underspeed) {
               if ((!overAcc) && (!coastDown)) {
-                acc_tan = std::min(5.0, acc_tan + ts*5.0);
+                acc_tan = std::min(5.0, acc_tan + ts*7.0);
                 std::cout << "jerk up" << std::endl;
-              } else if (overAcc) {
+              }
+              
+              if (overAcc) {
                 acc_tan = 5.0;
                 std::cout << "overaccelerating, capped" << std::endl;
-              } else if (coastDown) {
-                acc_tan =std::max(-3.0, acc_tan-7.0 * ts);
+              }
+
+              if (coastDown) {
+                acc_tan =std::max(-1.0, acc_tan-7.0 * ts);
                 std::cout << "jerk down" << std::endl;
               }
             } else if (overspeed ) {
               if (overAcc) {
                 acc_tan = 5.0;
               }
-              acc_tan =std::max(-7.0,acc_tan-8.0*ts);
-              std::cout << "brake" << std::endl;
+              
+              if (coastUp) {
+                acc_tan = std::min(1.0, acc_tan + 3.0*ts);
+                std::cout<<"coast up"<< std::endl;
+              }
+              else {
+                acc_tan = std::max(-7.0, acc_tan - 8.0*ts);
+                std::cout << "brake" << std::endl;
+              }
             } else {
               if (coastDown) {
-                acc_tan = std::max(-3.0, acc_tan - 7.0 * ts);
-                std::cout << "jerk down" << std::endl;
+                acc_tan = std::max(-1.0, acc_tan - 7.0 * ts);
+                std::cout << "coast down" << std::endl;
+              } else if (coastUp) {
+                  acc_tan = std::min(1.0, acc_tan + 3.0*ts);
+                  std::cout << "coast up" << std::endl;
+              }
+              if (abs(acc_tan) < 1.5 * ts) {
+                acc_tan = 0;
+                std::cout<<"dandy" << std::endl;
               }
             }
+
+
+          
+            acc_tan = std::max(acc_tan, -7.0);
+            acc_tan = std::min(acc_tan, 5.0);
             if (speed < 0) {
               std::cout<<"negative speed"<<std::endl;
             }
             std::cout<< "tangential acceleration out: " <<acc_tan <<std::endl;
             speed += acc_tan * ts;
             std::cout << "speed out: " << speed << std::endl;
-            double allowableDiff=0.02;
+            double allowableDiff=0.03;
             double tempX=pos_x_trans+speed*ts;
             double tempY=s(tempX);
             double tempSpeed=speedCalc(tempX, tempY, pos_x_trans,pos_y_trans,ts);
@@ -467,6 +494,7 @@ int main() {
             pos_y= rotCCW[1]+yOffset;
             pos_x_trans+=deltaX;
             pos_y_trans+=deltaY;
+            std::cout << "x: " << pos_x << " y: " << pos_y << std::endl;
             next_x_vals.push_back(pos_x);
             next_y_vals.push_back(pos_y);
             if (next_x_vals.size() < 3) {
