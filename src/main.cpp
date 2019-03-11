@@ -259,42 +259,101 @@ int main() {
             
           int lane = (pos_d - 2.0) / 4;
           
-          /*double car_ahead_speed=999;
-          double car_ahead_dist=999;
+          double lane1AheadDist = 999;
+          double lane2AheadDist = 999;
+          double lane3AheadDist = 999;
+          double lane1BehindDist = 999;
+          double lane2BehindDist = 999;
+          double lane3BehindDist = 999;
+          double lane1AheadSpd = speed;
+          double lane2AheadSpd = speed;
+          double lane3AheadSpd = speed;
+          double lane1BehindSpd = speed;
+          double lane2BehindSpd = speed;
+          double lane3BehindSpd = speed;
+
+          double targetX_speed;
           double sf_s;
+          double future_s;
           double sf_d;
           double sf_vx;
-          double sf_vy;*/
-          double tempSpeed;
-          /*
+          double sf_vy;
+          
           for (int i=0; i<sensor_fusion.size(); ++i) {
             //std::cout<<sensor_fusion[i][0]<<std::endl;
             sf_d=sensor_fusion[i][6];
-            if (abs(sf_d-car_d)<4) {
-              //same lane
-              sf_s=sensor_fusion[i][5];
-              if (sf_s-car_s>0) {
-                if (sf_s-car_s<car_ahead_dist) {
-                  car_ahead_dist=sf_s-car_s;
-                  sf_vx=sensor_fusion[i][3];
-                  sf_vy=sensor_fusion[i][4];
-                  car_ahead_speed=sqrt(pow(sf_vx,2)+pow(sf_vy,2));
+            sf_s = sensor_fusion[i][5];
+            sf_vx = sensor_fusion[i][3];
+            sf_vy = sensor_fusion[i][4];
+            targetX_speed = sqrt(pow(sf_vx, 2) + pow(sf_vy, 2));
+            future_s = sf_s + ts * prevPathSize*targetX_speed;
+            if (sf_d<4) { //lane 1
+              if (future_s > pos_s) {
+                if ((future_s - pos_s) < lane1AheadDist) {
+                  lane1AheadDist = future_s - pos_s;
+                  lane1AheadSpd = targetX_speed;
+                }
+              }
+              else {
+                if ((pos_s - future_s) < lane1BehindDist) {
+                  lane1BehindDist = pos_s - future_s;
+                  lane1BehindSpd = targetX_speed;
+                }
+              }
+            }
+            else if (sf_d < 8) { //lane 2
+              if (future_s > pos_s) {
+                if ((future_s - pos_s) < lane2AheadDist) {
+                  lane2AheadDist = future_s - pos_s;
+                  lane2AheadSpd = targetX_speed;
+                }
+              }
+              else {
+                if ((pos_s - future_s) < lane2BehindDist) {
+                  lane2BehindDist = pos_s - future_s;
+                  lane2BehindSpd = targetX_speed;
+                }
+              }
+            }
+            else { //lane 3
+              if (future_s > pos_s) {
+                if ((future_s - pos_s) < lane3AheadDist) {
+                  lane3AheadDist = future_s - pos_s;
+                  lane3AheadSpd = targetX_speed;
+                }
+              }
+              else {
+                if ((pos_s - future_s) < lane3BehindDist) {
+                  lane3BehindDist = pos_s - future_s;
+                  lane3BehindSpd = targetX_speed;
                 }
               }
             }
           }
-
-          if ((car_ahead_dist < 50) && (car_ahead_speed < ref_speed)) {
-            ref_speed = car_ahead_speed - 0.5;
-            max_speed = ref_speed + 0.15;
-            min_speed = ref_speed - 0.15;
+          double car_ahead_dist;
+          double car_ahead_speed;
+          if (lane == 1) {
+            car_ahead_dist = lane1AheadDist;
+            car_ahead_speed = lane1AheadSpd;
+          }
+          else if (lane == 2) {
+            car_ahead_dist = lane2AheadDist;
+            car_ahead_speed = lane2AheadSpd;
           }
           else {
-            ref_speed = 50.0 * maxDistTravel;
-            max_speed = ref_speed + 0.15;
-            min_speed = ref_speed - 0.15;
-          } */
+            car_ahead_dist = lane3AheadDist;
+            car_ahead_speed = lane3AheadSpd;
+          }
+          if ((car_ahead_dist < 50) && (car_ahead_speed < ref_speed)) {
+            std::cout << "car ahead slowdown: speed = " << car_ahead_speed << std::endl;
+            ref_speed = car_ahead_speed - 2.0*maxDistTravel;
+          }
+          else {
+            ref_speed = 45.0 * maxDistTravel;
+          }
 
+          max_speed = ref_speed + 2.0*maxDistTravel;
+          min_speed = ref_speed - 2.0*maxDistTravel;
           int numSteps=30;
           int projSteps = 5;
           vector<double> xPath(projSteps), yPath(projSteps);
@@ -336,8 +395,8 @@ int main() {
             std::cout << "tangential acceleration incoming: " << acc_tan <<std::endl;
             bool underspeed = (speed < min_speed);
             bool overspeed = (speed > max_speed);
-            bool overAcc = (abs(acc_tan) > 5.0);
-            bool coastDown = (acc_tan >= sqrt(abs(14.0*(min_speed - speed))));
+            bool overAcc = (acc_tan > 5.0);
+            bool coastDown = (acc_tan >= sqrt(14.0*(speed-ref_speed)));
             if (underspeed) {
               if ((!overAcc) && (!coastDown)) {
                 acc_tan = std::min(5.0, acc_tan + ts*5.0);
@@ -346,7 +405,7 @@ int main() {
                 acc_tan = 5.0;
                 std::cout << "overaccelerating, capped" << std::endl;
               } else if (coastDown) {
-                acc_tan =std::max(-7.0, acc_tan-7.0 * ts);
+                acc_tan =std::max(-3.0, acc_tan-7.0 * ts);
                 std::cout << "jerk down" << std::endl;
               }
             } else if (overspeed ) {
@@ -357,7 +416,7 @@ int main() {
               std::cout << "brake" << std::endl;
             } else {
               if (coastDown) {
-                acc_tan = std::max(-7.0, acc_tan - 7.0 * ts);
+                acc_tan = std::max(-3.0, acc_tan - 7.0 * ts);
                 std::cout << "jerk down" << std::endl;
               }
             }

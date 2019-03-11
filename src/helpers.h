@@ -194,5 +194,4 @@ vector<double> kinematics(double& x2, double& y2, double& x1, double& y1, double
 }
 
 
-
 #endif  // HELPERS_H
