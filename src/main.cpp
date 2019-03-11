@@ -214,7 +214,7 @@ int main() {
             next_y_vals.push_back(previous_path_y[i]);
           }
           switch (prevPathSize) {
-            case 0:
+            case 0: {
               pos_x = car_x;
               pos_y = car_y;
               theta=deg2rad(car_yaw);
@@ -223,16 +223,16 @@ int main() {
               speed = car_speed;
               pos_s = car_s;
               pos_d = car_d;
-              break;
-            case 1:
+              break; }
+            case 1: {
               speed = car_speed;
               theta = deg2rad(car_yaw);
               pos_x = previous_path_x[0];
               pos_y = previous_path_y[0];
               pos_s = car_s;
               pos_d = car_d;
-              break;
-            case 2:
+              break; }
+            case 2: {
               pos_x= previous_path_x[prevPathSize - 1];
               pos_y = previous_path_y[prevPathSize - 1];
 
@@ -243,8 +243,8 @@ int main() {
               theta = kine2p[1];
               pos_s = car_s;
               pos_d = car_d;
-              break;
-            case 3:
+              break; }
+            case 3: {
               pos_x = previous_path_x[prevPathSize - 1];
               pos_y = previous_path_y[prevPathSize - 1];
 
@@ -259,8 +259,8 @@ int main() {
               acc_tan = kine3p[3];
               pos_s = car_s;
               pos_d = car_d;
-              break;
-            case 4:
+              break; }
+            case 4: {
               pos_x = previous_path_x[prevPathSize - 1];
               pos_y = previous_path_y[prevPathSize - 1];
               prev_pos_x = previous_path_x[prevPathSize - 2];
@@ -276,8 +276,8 @@ int main() {
               acc_tan = kine3p[3];
               pos_s = car_s;
               pos_d = car_d;
-              break;
-            case 5:
+              break; }
+            case 5: {
               pos_x = previous_path_x[prevPathSize - 1];
               pos_y = previous_path_y[prevPathSize - 1];
               prev_pos_x = previous_path_x[prevPathSize - 2];
@@ -295,8 +295,8 @@ int main() {
               acc_tan = kine3p[3];
               pos_s = car_s;
               pos_d = car_d;
-              break;
-            case 6:
+              break; }
+            case 6: {
               pos_x = previous_path_x[prevPathSize - 1];
               pos_y = previous_path_y[prevPathSize - 1];
               prev_pos_x = previous_path_x[prevPathSize - 2];
@@ -316,8 +316,8 @@ int main() {
               acc_tan = kine3p[3];
               pos_s = car_s;
               pos_d = car_d;
-              break;
-            case 7:
+              break; }
+            case 7: {
               pos_x = previous_path_x[prevPathSize - 1];
               pos_y = previous_path_y[prevPathSize - 1];
               prev_pos_x = previous_path_x[prevPathSize - 2];
@@ -339,8 +339,8 @@ int main() {
               acc_tan = kine3p[3];
               pos_s = car_s;
               pos_d = car_d;
-              break;
-            default:
+              break; }
+            default: {
               pos_x = previous_path_x[prevPathSize - 1];
               pos_y = previous_path_y[prevPathSize - 1];
               prev_pos_x = previous_path_x[prevPathSize - 2];
@@ -370,7 +370,7 @@ int main() {
                 pos_s = car_s;
                 pos_d = car_d;
               }
-              break;
+              break; }
           }
           
           std::cout << "x: " << pos_x << " y: " << pos_y << std::endl;
