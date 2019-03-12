@@ -444,8 +444,7 @@ int main() {
               } else if (coastUp) {
                   acc_tan = std::min(1.0, acc_tan + 3.0*ts);
                   std::cout << "coast up" << std::endl;
-              }
-              if (abs(acc_tan) < 3.0 * ts) {
+              } else if (abs(acc_tan) < 1.5 * ts) {
                 acc_tan = 0;
                 std::cout<<"dandy" << std::endl;
               }
