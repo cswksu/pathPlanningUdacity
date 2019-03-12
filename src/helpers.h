@@ -4,6 +4,7 @@
 #include <math.h>
 #include <string>
 #include <vector>
+#include <numeric>
 
 // for convenience
 using std::string;
@@ -191,6 +192,23 @@ vector<double> kinematics(double& x2, double& y2, double& x1, double& y1, double
   //double accN = sqrt(pow(acc, 2) - pow(accT, 2));
 
   return { speed, theta, speed0, accT };
+}
+
+vector<double> kinematics(vector<double> xPath, vector<double> yPath, double& ts) {
+  int len = xPath.size();
+  double theta = atan2(yPath[len - 1] - yPath[len - 2], xPath[len - 1] - xPath[len - 2]);
+  vector<double> speedVect(len - 1);
+  vector<double> accVect(len - 2);
+  vector<double> weightAccVect(len - 2);
+  speedVect[0] = sqrt(pow(xPath[0] - xPath[1], 2) + pow(yPath[0] - yPath[1], 2)) / ts;
+  double scaleFactor = 0.5*(len - 3)*(len - 2);
+  for (int i = 0; i < len - 2; ++i) {
+    speedVect[i+1] = sqrt(pow(xPath[i+1] - xPath[i+2], 2) + pow(yPath[i+1] - yPath[i+2], 2)) / ts;
+    accVect[i] = (speedVect[i + 1] - speedVect[i]) / ts;
+    weightAccVect[i] = i / scaleFactor * accVect[i];
+  }
+  double weightedAverageAcc = std::accumulate(weightAccVect.begin(), weightAccVect.end(), 0);
+  return { speedVect[len - 2],theta,speedVect[len - 3],weightedAverageAcc };
 }
 
 

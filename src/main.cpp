@@ -247,7 +247,7 @@ int main() {
             prev_prev_pos_x = previous_path_x[prevPathSize - 3];
             prev_prev_pos_y = previous_path_y[prevPathSize - 3];
             std::cout << "x_-2: " << prev_prev_pos_x << " y_-2: " << prev_prev_pos_y << std::endl;
-            vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev_prev_pos_x, prev_prev_pos_y, ts);
+            vector<double> kine3p = kinematics(next_x_vals, next_y_vals, ts);
             speed = kine3p[0];
             theta = kine3p[1];
             lastSpeed = kine3p[2];
@@ -267,7 +267,7 @@ int main() {
             
             
           int lane = round((pos_d - 2.0) / 4.0);
-          /*
+          
           double lane1AheadDist = 999;
           double lane2AheadDist = 999;
           double lane3AheadDist = 999;
@@ -364,7 +364,7 @@ int main() {
           }
           
           max_speed = ref_speed + 2.0*maxDistTravel;
-          min_speed = ref_speed - 2.0*maxDistTravel;*/
+          min_speed = ref_speed - 2.0*maxDistTravel;
           int numSteps=20;
           int projSteps = 5;
           vector<double> xPath(projSteps), yPath(projSteps);
