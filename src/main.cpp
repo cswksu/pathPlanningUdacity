@@ -4,11 +4,13 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <limits>
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
 #include "helpers.h"
 #include "json.hpp"
 #include "spline.h"
+
 
 // for convenience
 using nlohmann::json;
@@ -69,6 +71,8 @@ vector<double> JMT(vector<double> &start, vector<double> &end, double T) {
 
 int main() {
   uWS::Hub h;
+  typedef std::numeric_limits< double > dbl;
+  std::cout.precision(dbl::max_digits10);
 
   // Load up map values for waypoint's x,y,s and d normalized normal vectors
   vector<double> map_waypoints_x;
@@ -207,6 +211,7 @@ int main() {
           if (prevPathSize==0) {
             pos_x = car_x;
             pos_y = car_y;
+            std::cout << "x: " << pos_x << " y: " << pos_y << std::endl;
             theta=deg2rad(car_yaw);
             pos_s=car_s;
             pos_d=car_d;
@@ -218,12 +223,13 @@ int main() {
             theta = deg2rad(car_yaw);
             pos_x = previous_path_x[0];
             pos_y = previous_path_y[0];
+            std::cout << "x: " << pos_x << " y: " << pos_y << std::endl;
             pos_s = car_s;
             pos_d = car_d;
           } else if (prevPathSize == 2) {
             pos_x= previous_path_x[prevPathSize - 1];
             pos_y = previous_path_y[prevPathSize - 1];
-            
+            std::cout << "x: " << pos_x << " y: " << pos_y << std::endl;
             prev_pos_x = previous_path_x[prevPathSize - 2];
             prev_pos_y = previous_path_y[prevPathSize - 2];
             vector<double> kine2p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, ts);
@@ -234,11 +240,13 @@ int main() {
           } else {
             pos_x = previous_path_x[prevPathSize - 1];
             pos_y = previous_path_y[prevPathSize - 1];
-
+            std::cout << "x: " << pos_x << " y: " << pos_y << std::endl;
             prev_pos_x = previous_path_x[prevPathSize - 2];
             prev_pos_y = previous_path_y[prevPathSize - 2];
+            std::cout << "x_-1: " << prev_pos_x << " y_-1: " << prev_pos_y << std::endl;
             prev_prev_pos_x = previous_path_x[prevPathSize - 3];
             prev_prev_pos_y = previous_path_y[prevPathSize - 3];
+            std::cout << "x_-2: " << prev_prev_pos_x << " y_-2: " << prev_prev_pos_y << std::endl;
             vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev_prev_pos_x, prev_prev_pos_y, ts);
             speed = kine3p[0];
             theta = kine3p[1];
@@ -255,7 +263,7 @@ int main() {
               pos_d = car_d;
             }
           }
-          std::cout << "x: " << pos_x << " y: " << pos_y << std::endl;
+          
             
             
           int lane = round((pos_d - 2.0) / 4.0);
@@ -437,7 +445,7 @@ int main() {
                   acc_tan = std::min(1.0, acc_tan + 3.0*ts);
                   std::cout << "coast up" << std::endl;
               }
-              if (abs(acc_tan) < 1.5 * ts) {
+              if (abs(acc_tan) < 3.0 * ts) {
                 acc_tan = 0;
                 std::cout<<"dandy" << std::endl;
               }
@@ -502,9 +510,7 @@ int main() {
               speed = kine2p[0];
 
               theta = kine2p[1];
-              vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
-              pos_s = frenetPos[0];
-              pos_d = frenetPos[1];
+              
               lastSpeed = speed-acc_tan*ts;
               std::cout << "speed post-calculated: " << speed << std::endl;
             } else {
@@ -581,4 +587,3 @@ int main() {
   }
   h.run();
 }
-
