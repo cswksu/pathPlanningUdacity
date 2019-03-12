@@ -189,18 +189,8 @@ int main() {
           double pos_d;
           double prev_pos_x;
           double prev_pos_y;
-          double prev2_pos_x;
-          double prev2_pos_y;
-          double prev3_pos_x;
-          double prev3_pos_y;
-          double prev4_pos_x;
-          double prev4_pos_y;
-          double prev5_pos_x;
-          double prev5_pos_y;
-          double prev6_pos_x;
-          double prev6_pos_y;
-          double prev7_pos_x;
-          double prev7_pos_y;
+          double prev_prev_pos_x;
+          double prev_prev_pos_y;
           double theta;
           double speed=0;
           double acc_tan=0;
@@ -213,166 +203,58 @@ int main() {
             next_x_vals.push_back(previous_path_x[i]);
             next_y_vals.push_back(previous_path_y[i]);
           }
-          switch (prevPathSize) {
-            case 0: {
-              pos_x = car_x;
-              pos_y = car_y;
-              theta=deg2rad(car_yaw);
-              pos_s=car_s;
-              pos_d=car_d;
-              speed = car_speed;
-              pos_s = car_s;
-              pos_d = car_d;
-              break; }
-            case 1: {
-              speed = car_speed;
-              theta = deg2rad(car_yaw);
-              pos_x = previous_path_x[0];
-              pos_y = previous_path_y[0];
-              pos_s = car_s;
-              pos_d = car_d;
-              break; }
-            case 2: {
-              pos_x= previous_path_x[prevPathSize - 1];
-              pos_y = previous_path_y[prevPathSize - 1];
-
-              prev_pos_x = previous_path_x[prevPathSize - 2];
-              prev_pos_y = previous_path_y[prevPathSize - 2];
-              vector<double> kine2p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, ts);
-              speed = kine2p[0];
-              theta = kine2p[1];
-              pos_s = car_s;
-              pos_d = car_d;
-              break; }
-            case 3: {
-              pos_x = previous_path_x[prevPathSize - 1];
-              pos_y = previous_path_y[prevPathSize - 1];
-
-              prev_pos_x = previous_path_x[prevPathSize - 2];
-              prev_pos_y = previous_path_y[prevPathSize - 2];
-              prev2_pos_x = previous_path_x[prevPathSize - 3];
-              prev2_pos_y = previous_path_y[prevPathSize - 3];
-              vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev2_pos_x, prev2_pos_y, ts);
-              speed = kine3p[0];
-              theta = kine3p[1];
-              lastSpeed = kine3p[2];
-              acc_tan = kine3p[3];
-              pos_s = car_s;
-              pos_d = car_d;
-              break; }
-            case 4: {
-              pos_x = previous_path_x[prevPathSize - 1];
-              pos_y = previous_path_y[prevPathSize - 1];
-              prev_pos_x = previous_path_x[prevPathSize - 2];
-              prev_pos_y = previous_path_y[prevPathSize - 2];
-              prev2_pos_x = previous_path_x[prevPathSize - 3];
-              prev2_pos_y = previous_path_y[prevPathSize - 3];
-              prev3_pos_x = previous_path_x[prevPathSize - 4];
-              prev3_pos_y = previous_path_y[prevPathSize - 4];
-              vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev2_pos_x, prev2_pos_y, prev3_pos_x, prev3_pos_y, ts);
-              speed = kine3p[0];
-              theta = kine3p[1];
-              lastSpeed = kine3p[2];
-              acc_tan = kine3p[3];
-              pos_s = car_s;
-              pos_d = car_d;
-              break; }
-            case 5: {
-              pos_x = previous_path_x[prevPathSize - 1];
-              pos_y = previous_path_y[prevPathSize - 1];
-              prev_pos_x = previous_path_x[prevPathSize - 2];
-              prev_pos_y = previous_path_y[prevPathSize - 2];
-              prev2_pos_x = previous_path_x[prevPathSize - 3];
-              prev2_pos_y = previous_path_y[prevPathSize - 3];
-              prev3_pos_x = previous_path_x[prevPathSize - 4];
-              prev3_pos_y = previous_path_y[prevPathSize - 4];
-              prev4_pos_x = previous_path_x[prevPathSize - 5];
-              prev4_pos_y = previous_path_y[prevPathSize - 5];
-              vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev2_pos_x, prev2_pos_y, prev3_pos_x, prev3_pos_y, prev4_pos_x, prev4_pos_y, ts);
-              speed = kine3p[0];
-              theta = kine3p[1];
-              lastSpeed = kine3p[2];
-              acc_tan = kine3p[3];
-              pos_s = car_s;
-              pos_d = car_d;
-              break; }
-            case 6: {
-              pos_x = previous_path_x[prevPathSize - 1];
-              pos_y = previous_path_y[prevPathSize - 1];
-              prev_pos_x = previous_path_x[prevPathSize - 2];
-              prev_pos_y = previous_path_y[prevPathSize - 2];
-              prev2_pos_x = previous_path_x[prevPathSize - 3];
-              prev2_pos_y = previous_path_y[prevPathSize - 3];
-              prev3_pos_x = previous_path_x[prevPathSize - 4];
-              prev3_pos_y = previous_path_y[prevPathSize - 4];
-              prev4_pos_x = previous_path_x[prevPathSize - 5];
-              prev4_pos_y = previous_path_y[prevPathSize - 5];
-              prev5_pos_x = previous_path_x[prevPathSize - 6];
-              prev5_pos_y = previous_path_y[prevPathSize - 6];
-              vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev2_pos_x, prev2_pos_y, prev3_pos_x, prev3_pos_y, prev4_pos_x, prev4_pos_y, prev5_pos_x, prev5_pos_y, ts);
-              speed = kine3p[0];
-              theta = kine3p[1];
-              lastSpeed = kine3p[2];
-              acc_tan = kine3p[3];
-              pos_s = car_s;
-              pos_d = car_d;
-              break; }
-            case 7: {
-              pos_x = previous_path_x[prevPathSize - 1];
-              pos_y = previous_path_y[prevPathSize - 1];
-              prev_pos_x = previous_path_x[prevPathSize - 2];
-              prev_pos_y = previous_path_y[prevPathSize - 2];
-              prev2_pos_x = previous_path_x[prevPathSize - 3];
-              prev2_pos_y = previous_path_y[prevPathSize - 3];
-              prev3_pos_x = previous_path_x[prevPathSize - 4];
-              prev3_pos_y = previous_path_y[prevPathSize - 4];
-              prev4_pos_x = previous_path_x[prevPathSize - 5];
-              prev4_pos_y = previous_path_y[prevPathSize - 5];
-              prev5_pos_x = previous_path_x[prevPathSize - 6];
-              prev5_pos_y = previous_path_y[prevPathSize - 6];
-              prev6_pos_x = previous_path_x[prevPathSize - 7];
-              prev6_pos_y = previous_path_y[prevPathSize - 7];
-              vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev2_pos_x, prev2_pos_y, prev3_pos_x, prev3_pos_y, prev4_pos_x, prev4_pos_y, prev5_pos_x, prev5_pos_y, prev6_pos_x, prev6_pos_y, ts);
-              speed = kine3p[0];
-              theta = kine3p[1];
-              lastSpeed = kine3p[2];
-              acc_tan = kine3p[3];
-              pos_s = car_s;
-              pos_d = car_d;
-              break; }
-            default: {
-              pos_x = previous_path_x[prevPathSize - 1];
-              pos_y = previous_path_y[prevPathSize - 1];
-              prev_pos_x = previous_path_x[prevPathSize - 2];
-              prev_pos_y = previous_path_y[prevPathSize - 2];
-              prev2_pos_x = previous_path_x[prevPathSize - 3];
-              prev2_pos_y = previous_path_y[prevPathSize - 3];
-              prev3_pos_x = previous_path_x[prevPathSize - 4];
-              prev3_pos_y = previous_path_y[prevPathSize - 4];
-              prev4_pos_x = previous_path_x[prevPathSize - 5];
-              prev4_pos_y = previous_path_y[prevPathSize - 5];
-              prev5_pos_x = previous_path_x[prevPathSize - 6];
-              prev5_pos_y = previous_path_y[prevPathSize - 6];
-              prev6_pos_x = previous_path_x[prevPathSize - 7];
-              prev6_pos_y = previous_path_y[prevPathSize - 7];
-              prev7_pos_x = previous_path_x[prevPathSize - 8];
-              prev7_pos_y = previous_path_y[prevPathSize - 8];
-              vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev2_pos_x, prev2_pos_y, prev3_pos_x, prev3_pos_y, prev4_pos_x, prev4_pos_y, prev5_pos_x, prev5_pos_y, prev6_pos_x, prev6_pos_y, ts);
-              speed = kine3p[0];
-              theta = kine3p[1];
-              lastSpeed = kine3p[2];
-              acc_tan = kine3p[3];
-              if (prevPathSize == 15) {
-                vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
-                pos_s = frenetPos[0];
-                pos_d = frenetPos[1];
-              } else {
-                pos_s = car_s;
-                pos_d = car_d;
-              }
-              break; }
-          }
           
+          if (prevPathSize==0) {
+            pos_x = car_x;
+            pos_y = car_y;
+            theta=deg2rad(car_yaw);
+            pos_s=car_s;
+            pos_d=car_d;
+            speed = car_speed;
+            pos_s = car_s;
+            pos_d = car_d;
+          } else if (prevPathSize == 1) {
+            speed = car_speed;
+            theta = deg2rad(car_yaw);
+            pos_x = previous_path_x[0];
+            pos_y = previous_path_y[0];
+            pos_s = car_s;
+            pos_d = car_d;
+          } else if (prevPathSize == 2) {
+            pos_x= previous_path_x[prevPathSize - 1];
+            pos_y = previous_path_y[prevPathSize - 1];
+            
+            prev_pos_x = previous_path_x[prevPathSize - 2];
+            prev_pos_y = previous_path_y[prevPathSize - 2];
+            vector<double> kine2p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, ts);
+            speed = kine2p[0];
+            theta = kine2p[1];
+            pos_s = car_s;
+            pos_d = car_d;
+          } else {
+            pos_x = previous_path_x[prevPathSize - 1];
+            pos_y = previous_path_y[prevPathSize - 1];
+
+            prev_pos_x = previous_path_x[prevPathSize - 2];
+            prev_pos_y = previous_path_y[prevPathSize - 2];
+            prev_prev_pos_x = previous_path_x[prevPathSize - 3];
+            prev_prev_pos_y = previous_path_y[prevPathSize - 3];
+            vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev_prev_pos_x, prev_prev_pos_y, ts);
+            speed = kine3p[0];
+            theta = kine3p[1];
+            lastSpeed = kine3p[2];
+            acc_tan = kine3p[3];
+
+
+            if (prevPathSize == 15) {
+              vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
+              pos_s = frenetPos[0];
+              pos_d = frenetPos[1];
+            } else {
+              pos_s = car_s;
+              pos_d = car_d;
+            }
+          }
           std::cout << "x: " << pos_x << " y: " << pos_y << std::endl;
             
             
@@ -626,9 +508,9 @@ int main() {
               lastSpeed = speed-acc_tan*ts;
               std::cout << "speed post-calculated: " << speed << std::endl;
             } else {
-              prev2_pos_x=next_x_vals[next_x_vals.size()-3];
-              prev2_pos_y=next_y_vals[next_y_vals.size()-3];
-              vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev2_pos_x, prev2_pos_y, ts);
+              prev_prev_pos_x=next_x_vals[next_x_vals.size()-3];
+              prev_prev_pos_y=next_y_vals[next_y_vals.size()-3];
+              vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev_prev_pos_x, prev_prev_pos_y, ts);
               
               speed = kine3p[0];
               theta = kine3p[1];

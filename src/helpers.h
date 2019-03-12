@@ -182,106 +182,15 @@ vector<double> kinematics(double& x1, double& y1, double& x0, double& y0, double
 
 // Return speed, theta, last speed, accT
 vector<double> kinematics(double& x2, double& y2, double& x1, double& y1, double& x0, double& y0, double& ts) {
-  double vx=0.5*(3.0*x2-4.0*x1+x0)/ts;
-  double vy=0.5*(3.0*y2-4.0*y1+y0)/ts;
-  double theta = atan2(vy, vx);
-  double speed = sqrt(vx*vx+vy*vy);
-  vx=0.5*(x2-x0)/ts;
-  vy=0.5*(y2-y0)/ts;
-  double speed0 = sqrt(vx*vx+vy*vy);
+  double speed = speedCalc(x2, y2, x1, y1,ts);
+  double theta = atan2(y2 - y1, x2 - x1);
+
+  double speed0 = speedCalc(x1, y1, x0, y0, ts);
   //double acc = sqrt(pow(vx - vx0, 2) + pow(vy - vy0, 2))/ts;
   double accT = (speed - speed0) / ts;
   //double accN = sqrt(pow(acc, 2) - pow(accT, 2));
 
   return { speed, theta, speed0, accT };
-}
-
-vector<double> kinematics(double& x3, double& y3, double& x2, double& y2, double& x1, double& y1, double& x0, double& y0, double& ts) {
-  double vx=(1.0/6.0)*(11.0*x3-18.0*x2+9.0*x1-2.0*x0)/ts;
-  double vy=(1.0/6.0)*(11.0*y3-18.0*y2+9.0*y1-2.0*y0)/ts;
-  double theta = atan2(vy, vx);
-  double speed2 = sqrt(vx*vx+vy*vy);
-  vx=(1.0/6.0)*(2.0*x3+3.0*x2-6.0*x1+x0)/ts;
-  vy=(1.0/6.0)*(2.0*y3+3.0*y2-6.0*y1+y0)/ts;
-  double speed1 = sqrt(vx*vx+vy*vy);
-  double speed0 = speedCalc(x1,y1,x0,y0,ts);
-  //double acc = sqrt(pow(vx - vx0, 2) + pow(vy - vy0, 2))/ts;
-  double accT = (1.5*speed2-2.0*speed1+0.5*speed0)/ts;
-
-  return { speed2, theta, speed1, accT };
-}
-
-vector<double> kinematics(double& x4, double& y4, double& x3, double& y3, double& x2, double& y2, double& x1, double& y1, double& x0, double& y0, double& ts) {
-  double vx=(1.0/12.0)*(25.0*x4-48.0*x3+36.0*x2-16.0*x1+3.0*x0)/ts;
-  double vy=(1.0/12.0)*(25.0*y4-48.0*y3+36.0*y2-16.0*y1+3.0*y0)/ts;
-  double theta = atan2(vy, vx);
-  double speed3 = sqrt(vx*vx+vy*vy);
-  vx=(1.0/12.0)*(3.0*x4+10.0*x3-18.0*x2+6.0*x1-1.0*x0)/ts;
-  vy=(1.0/12.0)*(3.0*y4+10.0*y3-18.0*y2+6.0*y1-1.0*y0)/ts;
-  double speed2 = sqrt(vx*vx+vy*vy);
-  double speed1 = speedCalc(x2, y2, x1, y1, ts);
-  double speed0 = speedCalc(x1,y1,x0,y0,ts);
-  //double acc = sqrt(pow(vx - vx0, 2) + pow(vy - vy0, 2))/ts;
-  double accT = (11.0/6.0*speed3-3.0*speed2+1.5*speed1-1.0/3.0*speed0)/ts;
-
-  return { speed3, theta, speed2, accT };
-}
-
-
-
-vector<double> kinematics(double& x5, double& y5, double& x4, double& y4, double& x3, double& y3, double& x2, double& y2, double& x1, double& y1, double& x0, double& y0, double& ts) {
-  double vx=(1.0/60.0)*(137.0*x5-300.0*x4+300.0*x3-200.0*x2+75.0*x1-12.0*x0)/ts;
-  double vy=(1.0/60.0)*(137.0*y5-300.0*y4+300.0*y3-200.0*y2+75.0*y1-12.0*y0)/ts;
-  double theta = atan2(vy, vx);
-  double speed4 = sqrt(vx*vx+vy*vy);
-  vx=(1.0/60.0)*(12.0*x5+65.0*x4-120.0*x3+60.0*x2-20.0*x1+3.0*x0)/ts;
-  vy=(1.0/60.0)*(12.0*y5+65.0*y4-120.0*y3+60.0*y2-20.0*y1+3.0*y0)/ts;
-  double speed3 = sqrt(vx*vx+vy*vy);
-  double speed2 = speedCalc(x3, y3, x2, y2,ts);
-  double speed1 = speedCalc(x2, y2, x1, y1, ts);
-  double speed0 = speedCalc(x1,y1,x0,y0,ts);
-  //double acc = sqrt(pow(vx - vx0, 2) + pow(vy - vy0, 2))/ts;
-  double accT = (25.0/12.0*speed4-4.0*speed3+3.0*speed2-4.0/3.0*speed1+0.25*speed0)/ts;
-
-  return { speed4, theta, speed3, accT };
-}
-
-vector<double> kinematics(double& x6, double& y6, double& x5, double& y5, double& x4, double& y4, double& x3, double& y3, double& x2, double& y2, double& x1, double& y1, double& x0, double& y0, double& ts) {
-  double vx=(1.0/60.0)*(147.0*x6-360.0*x5+450.0*x4-400.0*x3+225.0*x2-72.0*x1+10.0*x0)/ts;
-  double vy=(1.0/60.0)*(147.0*y6-360.0*y5+450.0*y4-400.0*y3+225.0*y2-72.0*y1+10.0*y0)/ts;
-  double theta = atan2(vy, vx);
-  double speed5 = sqrt(vx*vx+vy*vy);
-  vx=(1.0/60.0)*(10.0*x6+77.0*x5-150.0*x4+100.0*x3-50.0*x2+15.0*x1-2.0*x0)/ts;
-  vy=(1.0/60.0)*(10.0*y6+77.0*y5-150.0*y4+100.0*y3-50.0*y2+15.0*y1-2.0*y0)/ts;
-  double speed4 = sqrt(vx*vx+vy*vy);
-  double speed3 = speedCalc(x4,y4,x3,y3,ts);
-  double speed2 = speedCalc(x3, y3, x2, y2,ts);
-  double speed1 = speedCalc(x2, y2, x1, y1, ts);
-  double speed0 = speedCalc(x1,y1,x0,y0,ts);
-  //double acc = sqrt(pow(vx - vx0, 2) + pow(vy - vy0, 2))/ts;
-  double accT = (137.0/60.0*speed5-5.0*speed4+5.0*speed3-10.0/3.0*speed2+1.25*speed1-0.2*speed0)/ts;
-
-  return { speed5, theta, speed4, accT };
-}
-
-
-vector<double> kinematics(double& x7, double& y7, double& x6, double& y6, double& x5, double& y5, double& x4, double& y4, double& x3, double& y3, double& x2, double& y2, double& x1, double& y1, double& x0, double& y0, double& ts) {
-  double vx = (1/420.0)*(1089.0*x7-2940.0*x6+4410.0*x5-4900.0*x4+3675.0*x3-1764.0*x2+490.0*x1-60.0*x0)/ts;
-  double vy = (1/420.0)*(1089.0*y7-2940.0*y6+4410.0*y5-4900.0*y4+3675.0*y3-1764.0*y2+490.0*y1-60.0*y0)/ts;
-  double theta = atan2(vy,vx);
-  double speed6 = sqrt(vx*vx+vy*vy);
-  vx = (1/420.0)*(60.0*x7+609.0*x6-1260.0*x5+1050.0*x4-700.0*x3+315.0*x2-84.0*x1+10.0*x0)/ts;
-  vy = (1/420.0)*(60.0*y7+609.0*y6-1260.0*y5+1050.0*y4-700.0*y3+315.0*y2-84.0*y1+10.0*y0)/ts;
-  double speed5 = sqrt(vx*vx+vy*vy);
-  double speed4 = speedCalc(x5,y5,x4,y4,ts);
-  double speed3 = speedCalc(x4,y4,x3,y3,ts);
-  double speed2 = speedCalc(x3, y3, x2, y2,ts);
-  double speed1 = speedCalc(x2, y2, x1, y1, ts);
-  double speed0 = speedCalc(x1,y1,x0,y0,ts);
-  //double acc = sqrt(pow(vx - vx0, 2) + pow(vy - vy0, 2))/ts;
-  double accT = (49.0/20*speed6-6.0*speed5+7.5*speed4-20.0/3.0*speed3+3.75*speed2-1.2*speed1+1.0/6.0*speed0)/ts;
-
-  return { speed6, theta, speed5, accT };
 }
 
 
