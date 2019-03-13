@@ -371,9 +371,16 @@ int main() {
           }
 
 
-          if ((car_ahead_dist < 75) && (car_ahead_speed < ref_speed)) {
-            std::cout << "car ahead slowdown: speed = " << car_ahead_speed << std::endl;
-            ref_speed = car_ahead_speed - 2.5*maxDistTravel;
+          if (car_ahead_speed < ref_speed) {
+            double ttc = (ref_speed - car_ahead_speed) / car_ahead_dist;
+            if (ttc < 3.0) {
+              ref_speed = car_ahead_speed;
+            }
+            if (ttc < 2.0) {
+              ref_speed = car_ahead_speed - 2.5*maxDistTravel;
+            }
+            //std::cout << "car ahead slowdown: speed = " << car_ahead_speed << std::endl;
+            //ref_speed = car_ahead_speed - 2.5*maxDistTravel;
 
           }
           else {
@@ -452,17 +459,17 @@ int main() {
             std::cout << "tangential acceleration incoming: " << acc_tan <<std::endl;
             bool underspeed = (speed <= min_speed);
             bool overspeed = (speed >= max_speed);
-            bool overAcc = (acc_tan > 5.0);
+            bool overAcc = (acc_tan > 3.0);
             bool coastDown = (acc_tan >= sqrt(14.0*(abs(speed-ref_speed))));
             bool coastUp = (-acc_tan >= sqrt(6.0 * abs(speed - ref_speed)));
             if (underspeed) {
               if ((!overAcc) && (!coastDown)) {
-                acc_tan = std::min(5.0, acc_tan + ts*7.0);
+                acc_tan = std::min(3.0, acc_tan + ts*7.0);
                 std::cout << "jerk up" << std::endl;
               }
               
               if (overAcc) {
-                acc_tan = 5.0;
+                acc_tan = 3.0;
                 //std::cout << "overaccelerating, capped" << std::endl;
               }
 
@@ -472,7 +479,7 @@ int main() {
               }
             } else if (overspeed ) {
               if (overAcc) {
-                acc_tan = 5.0;
+                acc_tan = 3.0;
               }
               
               if (coastUp) {
@@ -499,7 +506,7 @@ int main() {
 
           
             acc_tan = std::max(acc_tan, -7.0);
-            acc_tan = std::min(acc_tan, 5.0);
+            acc_tan = std::min(acc_tan, 3.0);
             if (speed < 0) {
               //std::cout<<"negative speed"<<std::endl;
             }
