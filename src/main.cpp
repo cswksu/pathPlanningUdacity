@@ -357,24 +357,24 @@ int main() {
           if (lane == 0) {
             car_ahead_dist = lane1AheadDist;
             car_ahead_speed = lane1AheadSpd;
-            if ((lane2BehindDist > 25) && (lane2AheadSpd > lane1AheadSpd + 2) && (lane2AheadDist > 75) && (speed > 10)) {
+            if (((lane2BehindDist/(lane2BehindSpd-speed) > 3.0)||((lane2BehindDist / (lane2BehindSpd - speed) < 0))) && (lane2BehindDist > 7) && (lane2AheadSpd > lane1AheadSpd + 2) && (lane2AheadDist > 75) && (speed > 10)) {
               changeRightFeas = true;
             }
           }
           else if (lane == 1) {
             car_ahead_dist = lane2AheadDist;
             car_ahead_speed = lane2AheadSpd;
-            if ((lane3BehindDist > 25) && (lane3AheadSpd > lane2AheadSpd + 2) && (lane3AheadDist > car_ahead_dist) && (speed > 10)) {
+            if (((lane3BehindDist / (lane3BehindSpd - speed) > 3.0) || ((lane3BehindDist / (lane3BehindSpd - speed) < 0))) && (lane3BehindDist>7) && (lane3AheadDist > car_ahead_dist) && (speed > 10)) {
               changeRightFeas = true;
             }
-            else if ((lane1BehindDist > 25) && (lane1AheadSpd > lane2AheadSpd + 2) && (lane1AheadDist > car_ahead_dist) && (speed > 10)) {
+            else if (((lane1BehindDist / (lane1BehindSpd - speed) > 3.0) || ((lane1BehindDist / (lane1BehindSpd - speed) < 0))) && (lane1BehindDist > 7) && (lane1AheadDist > car_ahead_dist) && (speed > 10)) {
               changeLeftFeas = true;
             }
           }
           else if (lane > 1) {
             car_ahead_dist = lane3AheadDist;
             car_ahead_speed = lane3AheadSpd;
-            if ((lane2BehindDist > 25) && (lane2AheadSpd > lane3AheadSpd + 2) && (lane2AheadDist > car_ahead_dist) && (speed > 10)) {
+            if (((lane2BehindDist / (lane2BehindSpd - speed) > 3.0) || ((lane2BehindDist / (lane2BehindSpd - speed) < 0))) && (lane2BehindDist > 7) && (lane2AheadDist > car_ahead_dist) && (speed > 10)) {
               changeLeftFeas = true;
             }
           }
