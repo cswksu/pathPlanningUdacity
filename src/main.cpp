@@ -374,7 +374,7 @@ int main() {
           if (car_ahead_speed < ref_speed) {
             std::cout << "car ahead speed: " << car_ahead_speed << std::endl;
 
-            double ttc =  car_ahead_dist / (ref_speed - car_ahead_speed);
+            double ttc =  car_ahead_dist / (2*ref_speed -car_ahead_speed);
             if (ttc < 3.0) {
               ref_speed = std::max(car_ahead_speed,0.0);
             }
