@@ -422,8 +422,11 @@ int main() {
               }
               else {
                 tempD = pos_d + shift / abs(shift)*.15; 
-                commitChangeL = false;
-                commitChangeR = false;
+                if (abs(shift) < 0.1) {
+                  commitChangeL = false;
+                  commitChangeR = false;
+                }
+                
               }
 
               
