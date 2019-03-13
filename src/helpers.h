@@ -133,8 +133,9 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s,
   const vector<double> &maps_x,
   const vector<double> &maps_y) {
   int prev_wp = -1;
+  
+  //switched order of arguments to utilize short-circuiting
   while ((prev_wp < (int)(maps_s.size() - 1)) && s > maps_s[prev_wp + 1]) {
-  //while (s > maps_s[prev_wp + 1] && (prev_wp < (int)(maps_s.size() - 1))) {
     ++prev_wp;
   }
 
@@ -156,6 +157,7 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s,
   return { x,y };
 }
 
+//rotate point clockwise by given angle in radians (positive is CW)
 vector<double> rotateCW(double& x, double& y, double& theta) {
   double xprime = x * cos(theta) + y * sin(theta);
   double yprime = -x * sin(theta) + y * cos(theta);
@@ -163,6 +165,7 @@ vector<double> rotateCW(double& x, double& y, double& theta) {
   return { xprime, yprime };
 }
 
+//rotate point counterclockwise by given angle in radians (positive is CCW)
 vector<double> rotateCCW(double& x, double& y, double& theta) {
   double xprime = x * cos(theta) - y * sin(theta);
   double yprime = x * sin(theta) + y * cos(theta);
@@ -170,6 +173,7 @@ vector<double> rotateCCW(double& x, double& y, double& theta) {
   return {xprime, yprime};
 }
 
+//calcluate speed from 2 points, timestep
 double speedCalc(double x1, double& y1, double& x0, double& y0, double& ts) {
   return sqrt(pow(x1 - x0, 2) + pow(y1 - y0, 2)) / ts;
 }
@@ -181,31 +185,32 @@ vector<double> kinematics(double& x1, double& y1, double& x0, double& y0, double
   return { speed, theta };
 }
 
-// Return speed, theta, last speed, accT
+// Return speed, theta, last speed, accT for 3 points, timestep
 vector<double> kinematics(double& x2, double& y2, double& x1, double& y1, double& x0, double& y0, double& ts) {
   double speed = speedCalc(x2, y2, x1, y1,ts);
   double theta = atan2(y2 - y1, x2 - x1);
 
   double speed0 = speedCalc(x1, y1, x0, y0, ts);
-  //double acc = sqrt(pow(vx - vx0, 2) + pow(vy - vy0, 2))/ts;
   double accT = (speed - speed0) / ts;
-  //double accN = sqrt(pow(acc, 2) - pow(accT, 2));
 
   return { speed, theta, speed0, accT };
 }
 
+
+//calculate speed, theta, last speed, accT for vectors of points, timestep
 vector<double> kinematics(vector<double> xPath, vector<double> yPath, double& ts) {
-  int len = xPath.size();
+  int len = xPath.size(); //length of paths
   double theta = atan2(yPath[len - 1] - yPath[len - 2], xPath[len - 1] - xPath[len - 2]);
-  vector<double> speedVect(len - 1);
-  //speedVect[0] = sqrt(pow(xPath[0] - xPath[1], 2) + pow(yPath[0] - yPath[1], 2)) / ts;
+  vector<double> speedVect(len - 1); //lose 1 point for speed calculations
 
   for (int i = 0; i < len - 1; ++i) {
     speedVect[i] = sqrt(pow(xPath[i + 1] - xPath[i], 2) + pow(yPath[i + 1] - yPath[i], 2)) / ts;
+    //calculate speed for each pair of points
   }
 
-  double acc_tan = 0;
-  switch (len - 2) {
+  double acc_tan = 0; //tangential acceleration
+  switch (len - 2) { //switch on number of points in path
+  //calculate tangential acceleration using backwards finite differences of speed
     case 2:
       acc_tan = (speedVect[1] - speedVect[0]) / ts;
       break;
@@ -226,7 +231,6 @@ vector<double> kinematics(vector<double> xPath, vector<double> yPath, double& ts
       break;
   }
     
-  //double weightedAverageAcc = std::accumulate(accVect.begin(), accVect.end(), 0);
   return { speedVect[len - 2],theta,speedVect[len - 3],acc_tan };
 }
 
