@@ -159,7 +159,8 @@ int main() {
           double car_s = j[1]["s"];
           double car_d = j[1]["d"];
           double car_yaw = j[1]["yaw"];
-          double car_speed = j[1]["speed"]*0.44704;
+          double car_speed = j[1]["speed"];
+          car_speed *= 0.44704;
           double maxDistTravel=0.44704; // distance in meters to travel
           double ref_speed = 45.0 * maxDistTravel;
           double max_speed = ref_speed+2.0*maxDistTravel;
