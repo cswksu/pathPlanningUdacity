@@ -346,7 +346,7 @@ int main() {
             changeRightFeas = false;
           }
           if ((changeLeftFeas) && (!commitChangeR)) {
-            if (lane > 1) {
+            if (lane > 0) {
               --lane;
               commitChangeL = true;
             }
@@ -360,7 +360,7 @@ int main() {
 
           }
           else if (commitChangeL) {
-            if (lane > 1) {
+            if (lane > 0) {
               --lane;
             }
           }
@@ -372,7 +372,9 @@ int main() {
 
 
           if (car_ahead_speed < ref_speed) {
-            double ttc = (ref_speed - car_ahead_speed) / car_ahead_dist;
+            std::cout << "car ahead speed: " << car_ahead_speed << std::endl;
+
+            double ttc =  car_ahead_dist / (ref_speed - car_ahead_speed);
             if (ttc < 3.0) {
               ref_speed = std::max(car_ahead_speed,0.0);
             }
