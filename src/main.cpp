@@ -51,10 +51,10 @@ int main() {
   bool commitChangeR = false;
   
 
-  std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
-  if (in_map_.good()) {
+  //std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
+  //if (in_map_.good()) {
     //std::cout << "file exists" << std::endl;
-  }
+  //}
   //std::cout << "reading in lines" << std::endl;
   string line;
   while (getline(in_map_, line)) {
@@ -154,7 +154,7 @@ int main() {
           double acc_tan=0;
           double lastSpeed = 0;
           double ts = 0.02;
-          const double max_dist = 6945.554/2;
+          const double max_dist = 6945.554/2.0;
 
           prevPathSize=std::min(prevPathSize,15);
           std::cout << "Previous path size: " << prevPathSize << std::endl;
