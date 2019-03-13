@@ -47,6 +47,9 @@ int main() {
 #endif
   // The max s value before wrapping around the track back to 0
   double max_s = 6945.554;
+  vector<double> prevX = {0};
+  vector<double> prevY = { 0 };
+  vector<double> prevAcc = { 0 };
   bool commitChangeL = false;
   bool commitChangeR = false;
   
@@ -79,12 +82,12 @@ int main() {
   //std::cout << "read in all lines" << std::endl;
 #ifdef UWS_VCPKG
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR]
+    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR, &prevX, &prevY, &prevAcc]
     (uWS::WebSocket<uWS::SERVER> *ws, char *data, size_t length,
       uWS::OpCode opCode) {
 #else
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR]
+    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR, &prevX, &prevY, &prevAcc]
     (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
       uWS::OpCode opCode) {
 #endif
@@ -218,7 +221,13 @@ int main() {
               pos_d = car_d;
             }
           }
-          std::cout << "msg acc_tan" << acc_tan << std::endl;
+          int lenPrev = prevX.size();
+          for (int i = 0; i < lenPrev; ++i) {
+            if ((abs(pos_x - prevX[i]) < 0.01) && (abs(pos_y - prevY[i]) < 0.01)) {
+              acc_tan = prevAcc[i];
+            }
+          }
+          std::cout << "msg acc_tan: " << acc_tan << std::endl;
           
             
             
@@ -252,7 +261,7 @@ int main() {
             sf_vy = sensor_fusion[i][4];
             targetX_speed = sqrt(pow(sf_vx, 2) + pow(sf_vy, 2));
             future_s = sf_s + ts * prevPathSize*targetX_speed;
-            /*while (abs(future_s - pos_s) > max_dist) {
+            while (abs(future_s - pos_s) > max_dist) {
               std::cout << "too big dist" << std::endl;
               if (future_s > pos_s) {
                 future_s -= max_dist * 2;
@@ -260,7 +269,7 @@ int main() {
               else {
                 future_s += max_dist * 2;
               }
-            }*/
+            }
             if (sf_d<4) { //lane 1
               if (future_s > pos_s) {
                 if ((future_s - pos_s) < lane1AheadDist) {
@@ -369,7 +378,7 @@ int main() {
             //std::cout << "car ahead no slowdown: speed = " << car_ahead_speed << std::endl;
 
           }
-          std::cout << "ref_speed" << ref_speed << std::endl;
+          std::cout << "ref_speed " << ref_speed << std::endl;
           max_speed = ref_speed + 2.0*maxDistTravel;
           min_speed = ref_speed - 2.0*maxDistTravel;
           
@@ -432,6 +441,10 @@ int main() {
           tk::spline s;
           s.set_points(xTransPath,yTransPath);
           std::cout<<"incoming speed: " << speed <<std::endl;
+          //int record = (50 - oldMsgLen)*2;
+          prevX.clear();
+          prevY.clear();
+          prevAcc.clear();
           for (int i =0; i < 50 - prevPathSize; ++i) {
             std::cout << "tangential acceleration incoming: " << acc_tan <<std::endl;
             bool underspeed = (speed <= min_speed);
@@ -531,7 +544,7 @@ int main() {
             pos_y= rotCCW[1]+yOffset;
             pos_x_trans+=deltaX;
             pos_y_trans+=deltaY;
-            //std::cout << "x: " << pos_x << " y: " << pos_y << std::endl;
+            std::cout << "x: " << pos_x << " y: " << pos_y << std::endl;
             next_x_vals.push_back(pos_x);
             next_y_vals.push_back(pos_y);
             if (next_x_vals.size() < 3) {
@@ -556,8 +569,10 @@ int main() {
             vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
             pos_s = frenetPos[0];
             pos_d = frenetPos[1];
+            prevX.push_back(pos_x);
+            prevY.push_back(pos_y);
+            prevAcc.push_back(acc_tan);
           }
-          
           
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;

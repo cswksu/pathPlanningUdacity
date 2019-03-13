@@ -196,27 +196,38 @@ vector<double> kinematics(double& x2, double& y2, double& x1, double& y1, double
 
 vector<double> kinematics(vector<double> xPath, vector<double> yPath, double& ts) {
   int len = xPath.size();
-  int start = std::max(0, len - 10);
   double theta = atan2(yPath[len - 1] - yPath[len - 2], xPath[len - 1] - xPath[len - 2]);
-  vector<double> speedVect(len - 1 - start);
-  vector<double> accVect(len - 2 - start);
-  vector<double> weightAccVect(len - 2 - start);
-  speedVect[0] = sqrt(pow(xPath[start] - xPath[start + 1], 2) + pow(yPath[start] - yPath[start + 1], 2)) / ts;
-  double weightsSum = 0;
-  for (int i = 0; i < len - 2 - start; ++i) {
-    speedVect[i + 1] = sqrt(pow(xPath[i + 1 + start] - xPath[i + 2 + start], 2) + pow(yPath[i + 1 + start] - yPath[i + 2 + start], 2)) / ts;
-    accVect[i] = (speedVect[i + 1] - speedVect[i]) / ts;
-    weightAccVect[i] = exp(i*2.0 / (len - 3 - start));
-    weightsSum += weightAccVect[i];
+  vector<double> speedVect(len - 1);
+  //speedVect[0] = sqrt(pow(xPath[0] - xPath[1], 2) + pow(yPath[0] - yPath[1], 2)) / ts;
+
+  for (int i = 0; i < len - 1; ++i) {
+    speedVect[i] = sqrt(pow(xPath[i + 1] - xPath[i], 2) + pow(yPath[i + 1] - yPath[i], 2)) / ts;
   }
-  //double weightsSum = std::accumulate(weightAccVect.begin(), weightAccVect.end(), 0);
-  double weightedAverageAcc = 0;
-  for (int i = 0; i < len - 2 - start; ++i) {
-    accVect[i] *= weightAccVect[i] / (weightsSum);
-    weightedAverageAcc += accVect[i];
+
+  double acc_tan = 0;
+  switch (len - 2) {
+    case 2:
+      acc_tan = (speedVect[1] - speedVect[0]) / ts;
+      break;
+    case 3:
+      acc_tan = (1.5*speedVect[2] - 2.0*speedVect[1] + 0.5*speedVect[0]) / ts;
+      break;
+    case 4:
+      acc_tan = (11.0 / 6.0*speedVect[3] - 3.0*speedVect[2] + 1.5*speedVect[1] - speedVect[0] / 3.0) / ts;
+      break;
+    case 5:
+      acc_tan = (25.0/12.0*speedVect[4]-4.0*speedVect[3]+3.0*speedVect[2]-4.0/3.0*speedVect[1]+0.25*speedVect[0]) / ts;
+      break;
+    case 6:
+      acc_tan= (137.0/60.0*speedVect[5]-5.0*speedVect[4]+5.0*speedVect[3]-10.0/3.0*speedVect[2]+1.25*speedVect[1]-0.2*speedVect[0])/ts;
+      break;
+    default:
+      acc_tan=(49.0/20.0*speedVect[len-2]-6.0*speedVect[len-3]+7.5*speedVect[len-4]-20.0/3.0*speedVect[len-5]+3.75*speedVect[len-6]-1.2*speedVect[len-7]+speedVect[len-8]/6.0)/ts;
+      break;
   }
+    
   //double weightedAverageAcc = std::accumulate(accVect.begin(), accVect.end(), 0);
-  return { speedVect[len - 2 - start],theta,speedVect[len - 3 - start],weightedAverageAcc };
+  return { speedVect[len - 2],theta,speedVect[len - 3],acc_tan };
 }
 
 
