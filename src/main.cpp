@@ -341,7 +341,7 @@ int main() {
               changeLeftFeas = true;
             }
           }
-          if (abs(acc_tan) > 3.0) {
+          if (abs(acc_tan) > 1.0) {
             changeLeftFeas = false;
             changeRightFeas = false;
           }
@@ -409,7 +409,7 @@ int main() {
                 tempD = pos_d + shift / abs(shift)*.15;
               }
               else if (abs(shift) > 0.5) {
-                tempD = pos_d + shift / abs(shift)*.3;
+                tempD = pos_d + shift / abs(shift)*.4;
               }
               else {
                 tempD = pos_d + shift / abs(shift)*.15; 
