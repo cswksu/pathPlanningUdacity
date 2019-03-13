@@ -22,8 +22,8 @@ using Eigen::VectorXd;
 
 int main() {
   uWS::Hub h;
-  typedef std::numeric_limits< double > dbl;
-  std::cout.precision(dbl::max_digits10);
+  //typedef std::numeric_limits< double > dbl;
+  //std::cout.precision(dbl::max_digits10);
 
   // Load up map values for waypoint's x,y,s and d normalized normal vectors
   vector<double> map_waypoints_x;
@@ -110,8 +110,8 @@ int main() {
           double car_s = j[1]["s"];
           double car_d = j[1]["d"];
           double car_yaw = j[1]["yaw"];
-          double car_speed = j[1]["speed"];
-          car_speed *= 0.44704;
+          double car_speed = j[1]["speed"] * 0.44704;
+          //car_speed *= 0.44704;
           double maxDistTravel=0.44704; // distance in meters to travel
           double ref_speed = 45.0 * maxDistTravel;
           double max_speed = ref_speed+2.0*maxDistTravel;
