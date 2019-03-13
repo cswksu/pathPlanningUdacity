@@ -5,8 +5,8 @@
 #include <vector>
 #include <cmath>
 #include <limits>
-#include "Eigen-3.3/Eigen/Core"
-#include "Eigen-3.3/Eigen/QR"
+//#include "Eigen-3.3/Eigen/Core"
+//#include "Eigen-3.3/Eigen/QR"
 #include "helpers.h"
 #include "json.hpp"
 #include "spline.h"
@@ -16,8 +16,8 @@
 using nlohmann::json;
 using std::string;
 using std::vector;
-using Eigen::MatrixXd;
-using Eigen::VectorXd;
+//using Eigen::MatrixXd;
+//using Eigen::VectorXd;
 
 
 int main() {
@@ -51,7 +51,7 @@ int main() {
   bool commitChangeR = false;
   
 
-  //std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
+  std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
   //if (in_map_.good()) {
     //std::cout << "file exists" << std::endl;
   //}
@@ -110,7 +110,7 @@ int main() {
           double car_s = j[1]["s"];
           double car_d = j[1]["d"];
           double car_yaw = j[1]["yaw"];
-          double car_speed = j[1]["speed"] * 0.44704;
+          double car_speed = j[1]["speed"];
           //car_speed *= 0.44704;
           double maxDistTravel=0.44704; // distance in meters to travel
           double ref_speed = 45.0 * maxDistTravel;
@@ -170,11 +170,11 @@ int main() {
             theta=deg2rad(car_yaw);
             pos_s=car_s;
             pos_d=car_d;
-            speed = car_speed;
+            speed = car_speed * 0.44704;
             pos_s = car_s;
             pos_d = car_d;
           } else if (prevPathSize == 1) {
-            speed = car_speed;
+            speed = car_speed* 0.44704;
             theta = deg2rad(car_yaw);
             pos_x = previous_path_x[0];
             pos_y = previous_path_y[0];
@@ -218,6 +218,7 @@ int main() {
               pos_d = car_d;
             }
           }
+          std::cout << "msg acc_tan" << acc_tan << std::endl;
           
             
             
@@ -251,14 +252,15 @@ int main() {
             sf_vy = sensor_fusion[i][4];
             targetX_speed = sqrt(pow(sf_vx, 2) + pow(sf_vy, 2));
             future_s = sf_s + ts * prevPathSize*targetX_speed;
-            while (abs(future_s - pos_s) > max_dist) {
+            /*while (abs(future_s - pos_s) > max_dist) {
+              std::cout << "too big dist" << std::endl;
               if (future_s > pos_s) {
                 future_s -= max_dist * 2;
               }
               else {
                 future_s += max_dist * 2;
               }
-            }
+            }*/
             if (sf_d<4) { //lane 1
               if (future_s > pos_s) {
                 if ((future_s - pos_s) < lane1AheadDist) {
@@ -309,24 +311,24 @@ int main() {
           if (lane == 0) {
             car_ahead_dist = lane1AheadDist;
             car_ahead_speed = lane1AheadSpd;
-            if (((lane2BehindDist/(lane2BehindSpd-speed) > 3.0)||((lane2BehindDist / (lane2BehindSpd - speed) < 0))) && (lane2BehindDist > 7) && (lane2AheadSpd > lane1AheadSpd + 2) && (lane2AheadDist > 75) && (speed > 10)) {
+            if (((lane2BehindDist/(lane2BehindSpd-speed) > 3.0)||((lane2BehindDist / (lane2BehindSpd - speed) < 0))) && (lane2BehindDist > 15) && (lane2AheadSpd > lane1AheadSpd + 2) && (lane2AheadDist > 75) && (speed > 10)) {
               changeRightFeas = true;
             }
           }
           else if (lane == 1) {
             car_ahead_dist = lane2AheadDist;
             car_ahead_speed = lane2AheadSpd;
-            if (((lane3BehindDist / (lane3BehindSpd - speed) > 3.0) || ((lane3BehindDist / (lane3BehindSpd - speed) < 0))) && (lane3BehindDist>7) && (lane3AheadDist > car_ahead_dist) && (speed > 10)) {
+            if (((lane3BehindDist / (lane3BehindSpd - speed) > 3.0) || ((lane3BehindDist / (lane3BehindSpd - speed) < 0))) && (lane3BehindDist>15) && (lane3AheadDist > car_ahead_dist) && (speed > 10)) {
               changeRightFeas = true;
             }
-            else if (((lane1BehindDist / (lane1BehindSpd - speed) > 3.0) || ((lane1BehindDist / (lane1BehindSpd - speed) < 0))) && (lane1BehindDist > 7) && (lane1AheadDist > car_ahead_dist) && (speed > 10)) {
+            else if (((lane1BehindDist / (lane1BehindSpd - speed) > 3.0) || ((lane1BehindDist / (lane1BehindSpd - speed) < 0))) && (lane1BehindDist > 15) && (lane1AheadDist > car_ahead_dist) && (speed > 10)) {
               changeLeftFeas = true;
             }
           }
           else if (lane > 1) {
             car_ahead_dist = lane3AheadDist;
             car_ahead_speed = lane3AheadSpd;
-            if (((lane2BehindDist / (lane2BehindSpd - speed) > 3.0) || ((lane2BehindDist / (lane2BehindSpd - speed) < 0))) && (lane2BehindDist > 7) && (lane2AheadDist > car_ahead_dist) && (speed > 10)) {
+            if (((lane2BehindDist / (lane2BehindSpd - speed) > 3.0) || ((lane2BehindDist / (lane2BehindSpd - speed) < 0))) && (lane2BehindDist > 15) && (lane2AheadDist > car_ahead_dist) && (speed > 10)) {
               changeLeftFeas = true;
             }
           }
@@ -367,7 +369,7 @@ int main() {
             //std::cout << "car ahead no slowdown: speed = " << car_ahead_speed << std::endl;
 
           }
-
+          std::cout << "ref_speed" << ref_speed << std::endl;
           max_speed = ref_speed + 2.0*maxDistTravel;
           min_speed = ref_speed - 2.0*maxDistTravel;
           
@@ -429,9 +431,9 @@ int main() {
           double pos_y_trans=0;
           tk::spline s;
           s.set_points(xTransPath,yTransPath);
-          //std::cout<<"incoming speed: " << speed <<std::endl;
+          std::cout<<"incoming speed: " << speed <<std::endl;
           for (int i =0; i < 50 - prevPathSize; ++i) {
-            //std::cout << "tangential acceleration incoming: " << acc_tan <<std::endl;
+            std::cout << "tangential acceleration incoming: " << acc_tan <<std::endl;
             bool underspeed = (speed <= min_speed);
             bool overspeed = (speed >= max_speed);
             bool overAcc = (acc_tan > 5.0);
@@ -440,7 +442,7 @@ int main() {
             if (underspeed) {
               if ((!overAcc) && (!coastDown)) {
                 acc_tan = std::min(5.0, acc_tan + ts*7.0);
-                //std::cout << "jerk up" << std::endl;
+                std::cout << "jerk up" << std::endl;
               }
               
               if (overAcc) {
@@ -485,7 +487,7 @@ int main() {
             if (speed < 0) {
               //std::cout<<"negative speed"<<std::endl;
             }
-            //std::cout<< "tangential acceleration out: " <<acc_tan <<std::endl;
+            std::cout<< "tangential acceleration out: " <<acc_tan <<std::endl;
             speed += acc_tan * ts;
             //std::cout << "speed out: " << speed << std::endl;
             double allowableDiff=0.03;
