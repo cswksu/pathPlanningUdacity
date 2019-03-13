@@ -96,6 +96,8 @@ int main() {
 #endif
   // The max s value before wrapping around the track back to 0
   double max_s = 6945.554;
+  bool commitChangeL = false;
+  bool commitChangeR = false;
   
 
   std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
@@ -126,12 +128,12 @@ int main() {
   //std::cout << "read in all lines" << std::endl;
 #ifdef UWS_VCPKG
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-    &map_waypoints_dx, &map_waypoints_dy]
+    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR]
     (uWS::WebSocket<uWS::SERVER> *ws, char *data, size_t length,
       uWS::OpCode opCode) {
 #else
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-    &map_waypoints_dx, &map_waypoints_dy]
+    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR]
     (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
       uWS::OpCode opCode) {
 #endif
@@ -200,6 +202,7 @@ int main() {
           double acc_tan=0;
           double lastSpeed = 0;
           double ts = 0.02;
+          const double max_dist = 6945.554/2;
 
           prevPathSize=std::min(prevPathSize,15);
           std::cout << "Previous path size: " << prevPathSize << std::endl;
@@ -296,6 +299,14 @@ int main() {
             sf_vy = sensor_fusion[i][4];
             targetX_speed = sqrt(pow(sf_vx, 2) + pow(sf_vy, 2));
             future_s = sf_s + ts * prevPathSize*targetX_speed;
+            while (abs(future_s - pos_s) > max_dist) {
+              if (future_s > pos_s) {
+                future_s -= max_dist * 2;
+              }
+              else {
+                future_s += max_dist * 2;
+              }
+            }
             if (sf_d<4) { //lane 1
               if (future_s > pos_s) {
                 if ((future_s - pos_s) < lane1AheadDist) {
@@ -324,7 +335,7 @@ int main() {
                 }
               }
             }
-            else { //lane 3
+            else if (sf_d>=8) { //lane 3
               if (future_s > pos_s) {
                 if ((future_s - pos_s) < lane3AheadDist) {
                   lane3AheadDist = future_s - pos_s;
@@ -332,52 +343,117 @@ int main() {
                 }
               }
               else {
-                if ((pos_s - future_s) < lane3BehindDist) {
-                  lane3BehindDist = pos_s - future_s;
-                  lane3BehindSpd = targetX_speed;
-                }
+              if ((pos_s - future_s) < lane3BehindDist) {
+                lane3BehindDist = pos_s - future_s;
+                lane3BehindSpd = targetX_speed;
+              }
               }
             }
           }
-          double car_ahead_dist;
-          double car_ahead_speed;
-          if (lane == 1) {
+          double car_ahead_dist = 999;
+          double car_ahead_speed = 999;
+          bool changeRightFeas = false;
+          bool changeLeftFeas = false;
+          if (lane == 0) {
             car_ahead_dist = lane1AheadDist;
             car_ahead_speed = lane1AheadSpd;
+            if ((lane2BehindDist > 25) && (lane2AheadSpd > lane1AheadSpd + 2) && (lane2AheadDist > 75) && (speed > 10)) {
+              changeRightFeas = true;
+            }
           }
-          else if (lane == 2) {
+          else if (lane == 1) {
             car_ahead_dist = lane2AheadDist;
             car_ahead_speed = lane2AheadSpd;
+            if ((lane3BehindDist > 25) && (lane3AheadSpd > lane2AheadSpd + 2) && (lane3AheadDist > car_ahead_dist) && (speed > 10)) {
+              changeRightFeas = true;
+            }
+            else if ((lane1BehindDist > 25) && (lane1AheadSpd > lane2AheadSpd + 2) && (lane1AheadDist > car_ahead_dist) && (speed > 10)) {
+              changeLeftFeas = true;
+            }
           }
-          else {
+          else if (lane > 1) {
             car_ahead_dist = lane3AheadDist;
             car_ahead_speed = lane3AheadSpd;
+            if ((lane2BehindDist > 25) && (lane2AheadSpd > lane3AheadSpd + 2) && (lane2AheadDist > car_ahead_dist) && (speed > 10)) {
+              changeLeftFeas = true;
+            }
           }
-          if ((car_ahead_dist < 50) && (car_ahead_speed < ref_speed)) {
+
+          if ((changeLeftFeas) && (!commitChangeR)) {
+            if (lane > 1) {
+              --lane;
+              commitChangeL = true;
+            }
+
+          }
+          else if ((changeRightFeas) && (!commitChangeL)) {
+            if (lane < 2) {
+              ++lane;
+              commitChangeR = true;
+            }
+
+          }
+          else if (commitChangeL) {
+            if (lane > 1) {
+              --lane;
+            }
+          }
+          else if (commitChangeR) {
+            if (lane < 2) {
+              ++lane;
+            }
+          }
+
+
+          if ((car_ahead_dist < 75) && (car_ahead_speed < ref_speed)) {
             std::cout << "car ahead slowdown: speed = " << car_ahead_speed << std::endl;
-            ref_speed = car_ahead_speed - 2.0*maxDistTravel;
+            ref_speed = car_ahead_speed - 2.5*maxDistTravel;
+
           }
           else {
             ref_speed = 45.0 * maxDistTravel;
             std::cout << "car ahead no slowdown: speed = " << car_ahead_speed << std::endl;
 
           }
-          
+
           max_speed = ref_speed + 2.0*maxDistTravel;
           min_speed = ref_speed - 2.0*maxDistTravel;
-          int numSteps=20;
+          
           int projSteps = 5;
+          int targSteps = 100;
           vector<double> xPath(projSteps), yPath(projSteps);
           //double tempS=pos_s;
           //double tempD= pos_d;
           //vector<double> xyTemp= getXY(tempS, tempD,map_waypoints_s, map_waypoints_x, map_waypoints_y);
-          double xOffset=pos_x;
-          double yOffset=pos_y;
+          double xOffset = pos_x;
+          double yOffset = pos_y;
           xPath[0] = 0;
           yPath[0] = 0;
-          for (int i=1; i < projSteps; ++i) {
-            double tempS=pos_s+i*(speed+5)*numSteps*ts;
-            double tempD= pos_d+i/(projSteps-1.0)*(lane*4.0+2.0-pos_d);
+          double shift = lane * 4.0 + 2.0 - pos_d;
+          
+          
+          for (int i = 1; i < projSteps; ++i) {
+            double stage = 1.0 / (projSteps - i);
+            double tempS = pos_s + i * (speed + 5)*targSteps*stage*ts;
+            
+            double tempD = pos_d + shift;
+            if ((commitChangeL) || (commitChangeR)) {
+              
+              if (abs(shift) > 3.0) {
+                tempD = pos_d + shift / abs(shift)*.1;
+              }
+              else if (abs(shift) > 0.5) {
+                tempD = pos_d + shift / abs(shift)*.4;
+              }
+              else {
+                tempD = pos_d + shift / abs(shift)*.1; 
+                commitChangeL = false;
+                commitChangeR = false;
+              }
+
+              
+            }
+            //double tempD= pos_d+multiplier/(projSteps-1.0)*shift*stage*2;
             vector<double> xyTemp= getXY(tempS, tempD,map_waypoints_s, map_waypoints_x, map_waypoints_y);
             xPath[i]=xyTemp[0]-xOffset;
             yPath[i]=xyTemp[1]-yOffset;

@@ -133,8 +133,8 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s,
   const vector<double> &maps_x,
   const vector<double> &maps_y) {
   int prev_wp = -1;
-
-  while (s > maps_s[prev_wp + 1] && (prev_wp < (int)(maps_s.size() - 1))) {
+  while ((prev_wp < (int)(maps_s.size() - 1)) && s > maps_s[prev_wp + 1]) {
+  //while (s > maps_s[prev_wp + 1] && (prev_wp < (int)(maps_s.size() - 1))) {
     ++prev_wp;
   }
 
@@ -196,19 +196,24 @@ vector<double> kinematics(double& x2, double& y2, double& x1, double& y1, double
 
 vector<double> kinematics(vector<double> xPath, vector<double> yPath, double& ts) {
   int len = xPath.size();
+  int start = std::max(0, len - 5);
   double theta = atan2(yPath[len - 1] - yPath[len - 2], xPath[len - 1] - xPath[len - 2]);
-  vector<double> speedVect(len - 1);
-  vector<double> accVect(len - 2);
-  vector<double> weightAccVect(len - 2);
-  speedVect[0] = sqrt(pow(xPath[0] - xPath[1], 2) + pow(yPath[0] - yPath[1], 2)) / ts;
+  vector<double> speedVect(len - 1-start);
+  vector<double> accVect(len - 2-start);
+  vector<double> weightAccVect(len - 2-start);
+  speedVect[0] = sqrt(pow(xPath[start] - xPath[start+1], 2) + pow(yPath[start] - yPath[start+1], 2)) / ts;
   double scaleFactor = 0.5*(len - 3)*(len - 2);
-  for (int i = 0; i < len - 2; ++i) {
-    speedVect[i+1] = sqrt(pow(xPath[i+1] - xPath[i+2], 2) + pow(yPath[i+1] - yPath[i+2], 2)) / ts;
+  for (int i = 0; i < len - 2-start; ++i) {
+    speedVect[i+1] = sqrt(pow(xPath[i+1+start] - xPath[i+2+start], 2) + pow(yPath[i+1+start] - yPath[i+2+start], 2)) / ts;
     accVect[i] = (speedVect[i + 1] - speedVect[i]) / ts;
-    weightAccVect[i] = i / scaleFactor * accVect[i];
+    weightAccVect[i] = exp(i*2.0/(len-3-start));
   }
-  double weightedAverageAcc = std::accumulate(weightAccVect.begin(), weightAccVect.end(), 0);
-  return { speedVect[len - 2],theta,speedVect[len - 3],weightedAverageAcc };
+  double weightsSum = std::accumulate(weightAccVect.begin(),weightAccVect.end(),0);
+  for (int i = 0; i < len - 2-start; ++i) {
+    accVect[i] *= weightAccVect[i]/(weightsSum*(len-2-start));
+  }
+  double weightedAverageAcc = std::accumulate(accVect.begin(), accVect.end(), 0);
+  return { speedVect[len - 2-start],theta,speedVect[len - 3-start],weightedAverageAcc };
 }
 
 
