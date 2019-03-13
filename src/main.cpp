@@ -374,10 +374,10 @@ int main() {
           if (car_ahead_speed < ref_speed) {
             double ttc = (ref_speed - car_ahead_speed) / car_ahead_dist;
             if (ttc < 3.0) {
-              ref_speed = car_ahead_speed;
+              ref_speed = std::max(car_ahead_speed,0.0);
             }
             if (ttc < 2.0) {
-              ref_speed = car_ahead_speed - 2.5*maxDistTravel;
+              ref_speed = std::max(car_ahead_speed - 2.5*maxDistTravel,0.0);
             }
             //std::cout << "car ahead slowdown: speed = " << car_ahead_speed << std::endl;
             //ref_speed = car_ahead_speed - 2.5*maxDistTravel;
