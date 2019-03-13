@@ -341,7 +341,10 @@ int main() {
               changeLeftFeas = true;
             }
           }
-
+          if (abs(acc_tan) > 3.0) {
+            changeLeftFeas = false;
+            changeRightFeas = false;
+          }
           if ((changeLeftFeas) && (!commitChangeR)) {
             if (lane > 1) {
               --lane;
