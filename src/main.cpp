@@ -406,13 +406,13 @@ int main() {
             if ((commitChangeL) || (commitChangeR)) {
               
               if (abs(shift) > 3.0) {
-                tempD = pos_d + shift / abs(shift)*.1;
+                tempD = pos_d + shift / abs(shift)*.15;
               }
               else if (abs(shift) > 0.5) {
-                tempD = pos_d + shift / abs(shift)*.4;
+                tempD = pos_d + shift / abs(shift)*.3;
               }
               else {
-                tempD = pos_d + shift / abs(shift)*.1; 
+                tempD = pos_d + shift / abs(shift)*.15; 
                 commitChangeL = false;
                 commitChangeR = false;
               }
