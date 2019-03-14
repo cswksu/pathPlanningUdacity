@@ -37,6 +37,8 @@ int main() {
   vector<double> prevX = {0}; //persistent vectors for previous X, Y, acc
   vector<double> prevY = { 0 };
   vector<double> prevAcc = { 0 };
+  vector<double> yRate = { 0 };
+  int targLane = 1;
   bool commitChangeL = false; //persistent vectors for committing to lane change
   bool commitChangeR = false;
   
@@ -63,12 +65,12 @@ int main() {
   }
 #ifdef UWS_VCPKG  //windows
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR, &prevX, &prevY, &prevAcc]
+    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR, &prevX, &prevY, &prevAcc, &yRate, &targLane]
     (uWS::WebSocket<uWS::SERVER> *ws, char *data, size_t length,
       uWS::OpCode opCode) {
 #else //unix/mac
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR, &prevX, &prevY, &prevAcc]
+    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR, &prevX, &prevY, &prevAcc, &yRate, &targLane]
     (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
       uWS::OpCode opCode) {
 #endif
@@ -133,6 +135,7 @@ int main() {
           double lastSpeed = 0; //second to last speed
           double ts = 0.02; //timestep
           const double max_dist = 6945.554/2.0; //furthest s-distance possible
+          double yaw_rate = 0;
 
           prevPathSize=std::min(prevPathSize,15); //cap previous trajectory at 15 steps (0.3s)
           for (int i =0; i < prevPathSize; ++i) { //prefill trajectory with retained points
@@ -196,6 +199,7 @@ int main() {
           for (int i = 0; i < lenPrev; ++i) {
             if ((abs(pos_x - prevX[i]) < 0.01) && (abs(pos_y - prevY[i]) < 0.01)) {
               acc_tan = prevAcc[i]; //match to more accurate tangential acceleration
+              yaw_rate = yRate[i];
               break;
             }
           }
@@ -216,6 +220,12 @@ int main() {
           double lane1BehindSpd = 0;
           double lane2BehindSpd = 0;
           double lane3BehindSpd = 0;
+          double lane1AheadTTC = 999;
+          double lane2AheadTTC = 999;
+          double lane3AheadTTC = 999;
+          double lane1BehindTTC = 999;
+          double lane2BehindTTC = 999;
+          double lane3BehindTTC = 999;
 
           //values from individual fusion measurement
           double targetX_speed;
@@ -249,12 +259,20 @@ int main() {
                 if ((future_s - pos_s) < lane1AheadDist) {
                   lane1AheadDist = future_s - pos_s;
                   lane1AheadSpd = targetX_speed;
+                  lane1AheadTTC = lane1AheadDist / (speed - targetX_speed);
+                  if (lane1AheadTTC < 0) {
+                    lane1AheadTTC = 999;
+                  }
                 }
               }
               else {
                 if ((pos_s - future_s) < lane1BehindDist) {
                   lane1BehindDist = pos_s - future_s;
                   lane1BehindSpd = targetX_speed;
+                  lane1BehindTTC = lane1BehindDist / (-speed + targetX_speed);
+                  if (lane1BehindTTC < 0) {
+                    lane1BehindTTC = 999;
+                  }
                 }
               }
             }
@@ -263,12 +281,21 @@ int main() {
                 if ((future_s - pos_s) < lane2AheadDist) {
                   lane2AheadDist = future_s - pos_s;
                   lane2AheadSpd = targetX_speed;
+                  lane2AheadTTC = lane2AheadDist / (speed - targetX_speed);
+                  if (lane2AheadTTC < 0) {
+                    lane2AheadTTC = 999;
+                  }
                 }
+                
               }
               else {
                 if ((pos_s - future_s) < lane2BehindDist) {
                   lane2BehindDist = pos_s - future_s;
                   lane2BehindSpd = targetX_speed;
+                  lane2BehindTTC = lane2BehindDist / (-speed + targetX_speed);
+                  if (lane2BehindTTC < 0) {
+                    lane2BehindTTC = 999;
+                  }
                 }
               }
             }
@@ -277,16 +304,25 @@ int main() {
                 if ((future_s - pos_s) < lane3AheadDist) {
                   lane3AheadDist = future_s - pos_s;
                   lane3AheadSpd = targetX_speed;
+                  lane3AheadTTC = lane3AheadDist / (speed - targetX_speed);
+                  if (lane3AheadTTC < 0) {
+                    lane3AheadTTC = 999;
+                  }
                 }
               }
               else {
               if ((pos_s - future_s) < lane3BehindDist) {
                 lane3BehindDist = pos_s - future_s;
                 lane3BehindSpd = targetX_speed;
+                lane3BehindTTC = lane3BehindDist / (-speed + targetX_speed);
+                if (lane3BehindTTC < 0) {
+                  lane3BehindTTC = 999;
+                }
               }
               }
             }
           }
+          
           double car_ahead_dist = 999;
           double car_ahead_speed = 999;
           //feasibility of left and right lane change
@@ -296,7 +332,7 @@ int main() {
             car_ahead_dist = lane1AheadDist;
             car_ahead_speed = lane1AheadSpd;
             //check for lane 2 feasibility
-            if (((lane2BehindDist/(lane2BehindSpd-speed) > 3.0)||((lane2BehindDist / (lane2BehindSpd - speed) < 0))) && (lane2BehindDist > 15) && (lane2AheadSpd > lane1AheadSpd + 2) && (lane2AheadDist > 75) && (speed > 10)) {
+            if ((lane2BehindTTC > 3.0) && (lane2BehindDist > 15) && (lane2AheadTTC > lane1AheadTTC) && (lane2AheadDist > 15) && (lane1AheadDist > 15) && (lane2AheadSpd > lane1AheadSpd) && (speed > 10)) {
               changeRightFeas = true;
             }
           }
@@ -304,51 +340,67 @@ int main() {
             car_ahead_dist = lane2AheadDist;
             car_ahead_speed = lane2AheadSpd;
             //check for lane 3 feasibility
-            if (((lane3BehindDist / (lane3BehindSpd - speed) > 3.0) || ((lane3BehindDist / (lane3BehindSpd - speed) < 0))) && (lane3BehindDist>15) && (lane3AheadDist > car_ahead_dist) && (speed > 10)) {
+            if ((lane3BehindTTC> 3.0) && (lane3BehindDist>15) && (lane3AheadTTC > lane2AheadTTC) && (lane3AheadDist > 15) && (lane2AheadDist > 15) && (lane3AheadSpd > lane2AheadSpd) && (speed > 10)) {
               changeRightFeas = true;
             }
             //check for lane 1 feasibility
-            else if (((lane1BehindDist / (lane1BehindSpd - speed) > 3.0) || ((lane1BehindDist / (lane1BehindSpd - speed) < 0))) && (lane1BehindDist > 15) && (lane1AheadDist > car_ahead_dist) && (speed > 10)) {
+            if ((lane1BehindTTC > 3.0) && (lane1BehindDist > 15) && (lane1AheadTTC > lane2AheadTTC) && (lane2AheadDist>15) && (lane1AheadDist>15) && (lane2AheadSpd > lane1AheadSpd) && (speed > 10)) {
               changeLeftFeas = true;
+            }
+
+            if (changeLeftFeas && changeRightFeas) {
+              if (lane1AheadSpd > lane3AheadSpd) {
+                changeRightFeas = false;
+              }
+              else {
+                changeLeftFeas = false;
+              }
             }
           }
           else if (lane > 1) { //host lane is 3
             car_ahead_dist = lane3AheadDist;
             car_ahead_speed = lane3AheadSpd;
             //check for lane 2 feasibility
-            if (((lane2BehindDist / (lane2BehindSpd - speed) > 3.0) || ((lane2BehindDist / (lane2BehindSpd - speed) < 0))) && (lane2BehindDist > 15) && (lane2AheadDist > car_ahead_dist) && (speed > 10)) {
+            if ((lane2BehindTTC > 3.0) && (lane2BehindDist > 15) && (lane2AheadTTC > lane3AheadTTC) && (lane2AheadDist > 15) && (lane3AheadDist > 15) && (lane2AheadSpd > lane3AheadSpd) && (speed > 10)) {
               changeLeftFeas = true;
             }
           }
-          if (abs(acc_tan) > 1.0) { //prohibit lane changes while changing speeds
+          if ((abs(acc_tan) > 1.0) || (abs(yaw_rate)>0.1)) { //prohibit lane changes while changing speeds
             changeLeftFeas = false;
             changeRightFeas = false;
           }
-          if ((changeLeftFeas) && (!commitChangeR)) { //if lane change left is feasible
+          if ((changeLeftFeas) && (!commitChangeR)&&(!commitChangeL)) { //if lane change left is feasible
             if (lane > 0) {
-              --lane; //lane change
+              targLane=lane-1; //lane change
               commitChangeL = true; //commit to left lane change
+              std::cout << "Left lane change" << std::endl;
             }
 
           }
-          else if ((changeRightFeas) && (!commitChangeL)) { //if lane change right is feasible
+          else if ((changeRightFeas) && (!commitChangeL) && (!commitChangeR)) { //if lane change right is feasible
             if (lane < 2) {
-              ++lane; //lane change
+              targLane=lane+1; //lane change
               commitChangeR = true; //commit to change
+              std::cout << "Right lane change" << std::endl;
             }
 
           }
-          else if (commitChangeL) { //if ego vehicle has committed to change left
+          /*else if (commitChangeL) { //if ego vehicle has committed to change left
             if (lane > 0) {
               --lane;
             }
           }
           else if (commitChangeR) { //if ego vehicle has committed to change right
             if (lane < 2) {
-              ++lane;
+              ++lane;              
             }
+          }*/
+          if ((pos_d > 3.5) && (pos_d < 4.5)) {
+            car_ahead_speed=std::min(lane1AheadSpd,lane2AheadSpd);
           }
-
+          else if ((pos_d > 7.5) && (pos_d < 8.5)) {
+            car_ahead_speed = std::min(lane3AheadSpd, lane2AheadSpd);
+          }
 
           if (car_ahead_speed < ref_speed) { //if car ahead is slower than desired speed
             double ttc =  car_ahead_dist / (2*ref_speed -car_ahead_speed); //calculate time to collision
@@ -376,36 +428,38 @@ int main() {
           double yOffset = pos_y;
           xPath[0] = 0;
           yPath[0] = 0;
-          double shift = lane * 4.0 + 2.0 - pos_d; //required change in pos_d
-          
-          
+          double shift = targLane * 4.0 + 2.0 - pos_d; //required change in pos_d
+          double lastS = pos_s;
+          double lastD = pos_d;
           for (int i = 1; i < projSteps; ++i) {
             double stage = 1.0 / (projSteps - i); //how far in lane change
             double tempS = pos_s + i * (speed + 5)*targSteps*stage*ts; //s control point
-            
+            double deltaS = tempS - lastS;
             double tempD = pos_d + shift; //d control point
             if ((commitChangeL) || (commitChangeR)) { //if committed to change lanes
-              
-              if (abs(shift) > 3.0) { //early in lane change
-                tempD = pos_d + shift / abs(shift)*.15;
-              }
-              else if (abs(shift) > 0.5) { //middle of lane change
-                tempD = pos_d + shift / abs(shift)*.4;
-              }
-              else { //end of lane change
-                tempD = pos_d + shift / abs(shift)*.15; 
-                if (abs(shift) < 0.1) {
-                  commitChangeL = false; //completion of lane change
-                  commitChangeR = false;
+              if (commitChangeL) {
+                //tempD = lastD - deltaS * param*std::min(0.4, exp(progress * 10)*pow(exp(progress * 10) + 1, -2)) /targSteps;
+                tempD = lastD - 4.0 * i / projSteps;
+                if (tempD < (targLane * 4 + 2.0)) {
+                  tempD = targLane * 4 + 2.0;
                 }
-                
               }
+              else {
+                //tempD = lastD + deltaS * param*std::min(0.4,exp(progress*10)*pow(exp(progress*10) + 1, -2))/targSteps;
+                tempD = lastD + 4.0 * i / projSteps;
+                if (tempD > (targLane * 4 + 2.0)) {
+                  tempD = targLane * 4 + 2.0;
+                }
 
+              }
+              
               
             }
             vector<double> xyTemp= getXY(tempS, tempD,map_waypoints_s, map_waypoints_x, map_waypoints_y);
             xPath[i]=xyTemp[0]-xOffset; //add to spline
             yPath[i]=xyTemp[1]-yOffset;
+            lastD = tempD;
+            lastS = tempS;
             
           }
           double thetaRotCW=atan2(yPath[projSteps-1],xPath[projSteps-1]); //rotation angle
@@ -426,6 +480,7 @@ int main() {
           prevX.clear(); //clear persistent x, y, acc_tan vectors
           prevY.clear();
           prevAcc.clear();
+          yRate.clear();
           for (int i =0; i < 50 - prevPathSize; ++i) {
             bool underspeed = (speed <= min_speed);
             bool overspeed = (speed >= max_speed);
@@ -524,6 +579,7 @@ int main() {
               
               //get kinematics
               speed = kine2p[0];
+              yaw_rate = (kine2p[1] - theta) / ts;
 
               theta = kine2p[1];
               
@@ -534,6 +590,7 @@ int main() {
               vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev_prev_pos_x, prev_prev_pos_y, ts);
               //get kinematics
               speed = kine3p[0];
+              yaw_rate = (kine3p[1] - theta) / ts;
               theta = kine3p[1];
               lastSpeed = kine3p[2];
               acc_tan = kine3p[3];
@@ -541,6 +598,14 @@ int main() {
             vector<double> frenetPos = getFrenet(pos_x, pos_y, theta, map_waypoints_x, map_waypoints_y);
             pos_s = frenetPos[0];
             pos_d = frenetPos[1];
+
+            if ((commitChangeL||commitChangeR)&&(abs(pos_d - targLane * 4 - 2.0) < 0.2)) {
+              commitChangeL = false; //completion of lane change
+              commitChangeR = false;
+              std::cout << "lane change complete" << std::endl;
+            }
+            
+            yRate.push_back(yaw_rate);
             prevX.push_back(pos_x); //push trajectory and acceleration into persistent storage
             prevY.push_back(pos_y);
             prevAcc.push_back(acc_tan);
