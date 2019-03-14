@@ -5,6 +5,7 @@
 #include <vector>
 #include <cmath>
 #include <limits>
+#include <time.h>
 #include "helpers.h"
 #include "json.hpp"
 #include "spline.h"
@@ -37,8 +38,9 @@ int main() {
   vector<double> prevX = {0}; //persistent vectors for previous X, Y, acc
   vector<double> prevY = { 0 };
   vector<double> prevAcc = { 0 };
-  vector<double> yRate = { 0 };
-  int targLane = 1;
+  int lastChange = -1; //time of last lane change
+  clock_t timer; //timer for tracking lane changes
+  int targLane = 1; //target lane (0, 1 , 2)
   bool commitChangeL = false; //persistent vectors for committing to lane change
   bool commitChangeR = false;
   
@@ -65,12 +67,12 @@ int main() {
   }
 #ifdef UWS_VCPKG  //windows
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR, &prevX, &prevY, &prevAcc, &yRate, &targLane]
+    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR, &prevX, &prevY, &prevAcc, &targLane, &lastChange, &timer]
     (uWS::WebSocket<uWS::SERVER> *ws, char *data, size_t length,
       uWS::OpCode opCode) {
 #else //unix/mac
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR, &prevX, &prevY, &prevAcc, &yRate, &targLane]
+    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR, &prevX, &prevY, &prevAcc, &targLane, &lastChange, &timer]
     (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
       uWS::OpCode opCode) {
 #endif
@@ -114,11 +116,6 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
-          /**
-           * TODO: define a path made up of (x,y) points that the car will visit
-           *   sequentially every .02 seconds
-           */
-
 
           int prevPathSize=previous_path_x.size(); //points in previous trajectory
           double pos_x; //latest x position
@@ -135,7 +132,6 @@ int main() {
           double lastSpeed = 0; //second to last speed
           double ts = 0.02; //timestep
           const double max_dist = 6945.554/2.0; //furthest s-distance possible
-          double yaw_rate = 0;
 
           prevPathSize=std::min(prevPathSize,15); //cap previous trajectory at 15 steps (0.3s)
           for (int i =0; i < prevPathSize; ++i) { //prefill trajectory with retained points
@@ -149,11 +145,11 @@ int main() {
             theta=deg2rad(car_yaw);
             pos_s=car_s;
             pos_d=car_d;
-            speed = car_speed * 0.44704;
+            speed = car_speed * 0.44704;  //convert speed to m/s
             pos_s = car_s;
             pos_d = car_d;
           } else if (prevPathSize == 1) { //if path has only 1 point
-            speed = car_speed* 0.44704;
+            speed = car_speed* 0.44704; //convert to m/s
             theta = deg2rad(car_yaw);
             pos_x = previous_path_x[0];
             pos_y = previous_path_y[0];
@@ -170,7 +166,7 @@ int main() {
             theta = kine2p[1];
             pos_s = car_s;
             pos_d = car_d;
-          } else { //greater than 2 poitns
+          } else { //greater than 2 points
             pos_x = previous_path_x[prevPathSize - 1];
             pos_y = previous_path_y[prevPathSize - 1];
             prev_pos_x = previous_path_x[prevPathSize - 2];
@@ -178,7 +174,7 @@ int main() {
             prev_prev_pos_x = previous_path_x[prevPathSize - 3];
             prev_prev_pos_y = previous_path_y[prevPathSize - 3];
             vector<double> kine3p = kinematics(next_x_vals, next_y_vals, ts); //get kinematics
-            speed = kine3p[0];
+            speed = kine3p[0];  //collect output
             theta = kine3p[1];
             lastSpeed = kine3p[2];
             acc_tan = kine3p[3];
@@ -199,7 +195,6 @@ int main() {
           for (int i = 0; i < lenPrev; ++i) {
             if ((abs(pos_x - prevX[i]) < 0.01) && (abs(pos_y - prevY[i]) < 0.01)) {
               acc_tan = prevAcc[i]; //match to more accurate tangential acceleration
-              yaw_rate = yRate[i];
               break;
             }
           }
@@ -254,6 +249,8 @@ int main() {
                 future_s += max_dist * 2;
               }
             }
+
+            //track nearest vehicles ahead and behind of ego in each lane
             if (sf_d<4) { //lane 1
               if (future_s > pos_s) {
                 if ((future_s - pos_s) < lane1AheadDist) {
@@ -323,6 +320,7 @@ int main() {
             }
           }
           
+          //initialize variables for car in front of ego.
           double car_ahead_dist = 999;
           double car_ahead_speed = 999;
           //feasibility of left and right lane change
@@ -332,7 +330,7 @@ int main() {
             car_ahead_dist = lane1AheadDist;
             car_ahead_speed = lane1AheadSpd;
             //check for lane 2 feasibility
-            if ((lane2BehindTTC > 3.0) && (lane2BehindDist > 15) && (lane2AheadTTC > lane1AheadTTC) && (lane2AheadDist > 15) && (lane1AheadDist > 15) && (lane2AheadSpd > lane1AheadSpd) && (speed > 10)) {
+            if ((lane2BehindTTC > 3.0) && (lane2BehindDist > 15) && (lane2AheadTTC > lane1AheadTTC) && (lane2AheadDist > 45) && (lane1AheadDist > 45) && (lane2AheadSpd > lane1AheadSpd) && (speed > 10)) {
               changeRightFeas = true;
             }
           }
@@ -340,14 +338,14 @@ int main() {
             car_ahead_dist = lane2AheadDist;
             car_ahead_speed = lane2AheadSpd;
             //check for lane 3 feasibility
-            if ((lane3BehindTTC> 3.0) && (lane3BehindDist>15) && (lane3AheadTTC > lane2AheadTTC) && (lane3AheadDist > 15) && (lane2AheadDist > 15) && (lane3AheadSpd > lane2AheadSpd) && (speed > 10)) {
+            if ((lane3BehindTTC> 3.0) && (lane3BehindDist>25) && (lane3AheadTTC > lane2AheadTTC) && (lane3AheadDist > 45) && (lane2AheadDist > 45) && (lane3AheadSpd > lane2AheadSpd) && (speed > 10)) {
               changeRightFeas = true;
             }
             //check for lane 1 feasibility
-            if ((lane1BehindTTC > 3.0) && (lane1BehindDist > 15) && (lane1AheadTTC > lane2AheadTTC) && (lane2AheadDist>15) && (lane1AheadDist>15) && (lane2AheadSpd > lane1AheadSpd) && (speed > 10)) {
+            if ((lane1BehindTTC > 3.0) && (lane1BehindDist > 25) && (lane1AheadTTC > lane2AheadTTC) && (lane2AheadDist>45) && (lane1AheadDist>45) && (lane2AheadSpd > lane1AheadSpd) && (speed > 10)) {
               changeLeftFeas = true;
             }
-
+            //prefer lane with quicker car ahead
             if (changeLeftFeas && changeRightFeas) {
               if (lane1AheadSpd > lane3AheadSpd) {
                 changeRightFeas = false;
@@ -361,11 +359,24 @@ int main() {
             car_ahead_dist = lane3AheadDist;
             car_ahead_speed = lane3AheadSpd;
             //check for lane 2 feasibility
-            if ((lane2BehindTTC > 3.0) && (lane2BehindDist > 15) && (lane2AheadTTC > lane3AheadTTC) && (lane2AheadDist > 15) && (lane3AheadDist > 15) && (lane2AheadSpd > lane3AheadSpd) && (speed > 10)) {
+            if ((lane2BehindTTC > 3.0) && (lane2BehindDist > 15) && (lane2AheadTTC > lane3AheadTTC) && (lane2AheadDist > 45) && (lane3AheadDist > 45) && (lane2AheadSpd > lane3AheadSpd) && (speed > 10)) {
               changeLeftFeas = true;
             }
           }
-          if ((abs(acc_tan) > 1.0) || (abs(yaw_rate)>0.1)) { //prohibit lane changes while changing speeds
+          timer = clock(); //get current time
+          int checkTime = timer-lastChange; //get elapsed time since last lane change
+
+          //find point 5 meters ahead in lane
+          vector<double> point1 = getXY(pos_s + 5, pos_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+          //calculate angle from current position to point 1
+          double angle1 = atan2(point1[1] - pos_y, point1[0] - pos_x);
+          
+          //find point 100 meters ahead in lane
+          vector<double> point2 = getXY(pos_s + 100, pos_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+          //get angle from point 1 to point 2
+          double angle2 = atan2(point2[1] - point1[1], point2[0] - point1[0]);
+          bool isTurn = (abs(angle1 - angle2) > 0.1); //is there a turn in next 100 meters
+          if ((abs(acc_tan) > 1.0) || isTurn || (checkTime<5.0*CLOCKS_PER_SEC)) { //prohibit lane changes in turns, accelerations, every 5 seconds
             changeLeftFeas = false;
             changeRightFeas = false;
           }
@@ -373,7 +384,6 @@ int main() {
             if (lane > 0) {
               targLane=lane-1; //lane change
               commitChangeL = true; //commit to left lane change
-              std::cout << "Left lane change" << std::endl;
             }
 
           }
@@ -381,20 +391,11 @@ int main() {
             if (lane < 2) {
               targLane=lane+1; //lane change
               commitChangeR = true; //commit to change
-              std::cout << "Right lane change" << std::endl;
             }
 
           }
-          /*else if (commitChangeL) { //if ego vehicle has committed to change left
-            if (lane > 0) {
-              --lane;
-            }
-          }
-          else if (commitChangeR) { //if ego vehicle has committed to change right
-            if (lane < 2) {
-              ++lane;              
-            }
-          }*/
+          
+          //if in process of lane change, maintain lower of 2 ahead speeds
           if ((pos_d > 3.5) && (pos_d < 4.5)) {
             car_ahead_speed=std::min(lane1AheadSpd,lane2AheadSpd);
           }
@@ -431,6 +432,8 @@ int main() {
           double shift = targLane * 4.0 + 2.0 - pos_d; //required change in pos_d
           double lastS = pos_s;
           double lastD = pos_d;
+          
+          //spline creation logic
           for (int i = 1; i < projSteps; ++i) {
             double stage = 1.0 / (projSteps - i); //how far in lane change
             double tempS = pos_s + i * (speed + 5)*targSteps*stage*ts; //s control point
@@ -438,17 +441,17 @@ int main() {
             double tempD = pos_d + shift; //d control point
             if ((commitChangeL) || (commitChangeR)) { //if committed to change lanes
               if (commitChangeL) {
-                //tempD = lastD - deltaS * param*std::min(0.4, exp(progress * 10)*pow(exp(progress * 10) + 1, -2)) /targSteps;
+                //shift spline to left
                 tempD = lastD - 4.0 * i / projSteps;
                 if (tempD < (targLane * 4 + 2.0)) {
-                  tempD = targLane * 4 + 2.0;
+                  tempD = targLane * 4 + 2.0;  //center in lane
                 }
               }
               else {
-                //tempD = lastD + deltaS * param*std::min(0.4,exp(progress*10)*pow(exp(progress*10) + 1, -2))/targSteps;
+                //shift spline to right
                 tempD = lastD + 4.0 * i / projSteps;
                 if (tempD > (targLane * 4 + 2.0)) {
-                  tempD = targLane * 4 + 2.0;
+                  tempD = targLane * 4 + 2.0;  //center in lane
                 }
 
               }
@@ -480,7 +483,8 @@ int main() {
           prevX.clear(); //clear persistent x, y, acc_tan vectors
           prevY.clear();
           prevAcc.clear();
-          yRate.clear();
+
+          //speed control
           for (int i =0; i < 50 - prevPathSize; ++i) {
             bool underspeed = (speed <= min_speed);
             bool overspeed = (speed >= max_speed);
@@ -579,7 +583,6 @@ int main() {
               
               //get kinematics
               speed = kine2p[0];
-              yaw_rate = (kine2p[1] - theta) / ts;
 
               theta = kine2p[1];
               
@@ -590,7 +593,6 @@ int main() {
               vector<double> kine3p = kinematics(pos_x, pos_y, prev_pos_x, prev_pos_y, prev_prev_pos_x, prev_prev_pos_y, ts);
               //get kinematics
               speed = kine3p[0];
-              yaw_rate = (kine3p[1] - theta) / ts;
               theta = kine3p[1];
               lastSpeed = kine3p[2];
               acc_tan = kine3p[3];
@@ -602,10 +604,10 @@ int main() {
             if ((commitChangeL||commitChangeR)&&(abs(pos_d - targLane * 4 - 2.0) < 0.2)) {
               commitChangeL = false; //completion of lane change
               commitChangeR = false;
-              std::cout << "lane change complete" << std::endl;
+              timer = clock();
+              lastChange = timer;
             }
             
-            yRate.push_back(yaw_rate);
             prevX.push_back(pos_x); //push trajectory and acceleration into persistent storage
             prevY.push_back(pos_y);
             prevAcc.push_back(acc_tan);
