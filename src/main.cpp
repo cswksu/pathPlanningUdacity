@@ -43,6 +43,8 @@ int main() {
   int targLane = 1; //target lane (0, 1 , 2)
   bool commitChangeL = false; //persistent vectors for committing to lane change
   bool commitChangeR = false;
+  double laneChangeOrigS;
+  vector<double> JMTchange;
   
 
   std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
@@ -67,12 +69,12 @@ int main() {
   }
 #ifdef UWS_VCPKG  //windows
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR, &prevX, &prevY, &prevAcc, &targLane, &lastChange, &timer]
+    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR, &prevX, &prevY, &prevAcc, &targLane, &lastChange, &timer, &laneChangeOrigS, &JMTchange]
     (uWS::WebSocket<uWS::SERVER> *ws, char *data, size_t length,
       uWS::OpCode opCode) {
 #else //unix/mac
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR, &prevX, &prevY, &prevAcc, &targLane, &lastChange, &timer]
+    &map_waypoints_dx, &map_waypoints_dy, &commitChangeL, &commitChangeR, &prevX, &prevY, &prevAcc, &targLane, &lastChange, &timer, &laneChangeOrigS, &JMTchange]
     (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
       uWS::OpCode opCode) {
 #endif
@@ -380,17 +382,28 @@ int main() {
             changeLeftFeas = false;
             changeRightFeas = false;
           }
+          double timeTarg = 2.5;
           if ((changeLeftFeas) && (!commitChangeR)&&(!commitChangeL)) { //if lane change left is feasible
             if (lane > 0) {
               targLane=lane-1; //lane change
+              laneChangeOrigS = pos_s;
               commitChangeL = true; //commit to left lane change
+              vector<double>startVector = { pos_d, 0.0, 0.0 };
+              vector<double>endVector = { targLane*4.0 + 2.0, 0, 0 };
+              
+              JMTchange = JMT(startVector, endVector, timeTarg);
             }
 
           }
           else if ((changeRightFeas) && (!commitChangeL) && (!commitChangeR)) { //if lane change right is feasible
             if (lane < 2) {
               targLane=lane+1; //lane change
+              laneChangeOrigS = pos_s;
               commitChangeR = true; //commit to change
+              vector<double>startVector = { pos_d, 0.0, 0.0 };
+              vector<double>endVector = { targLane*4.0 + 2.0, 0, 0 };
+              
+              JMTchange = JMT(startVector, endVector, timeTarg);
             }
 
           }
@@ -440,7 +453,7 @@ int main() {
             double deltaS = tempS - lastS;
             double tempD = pos_d + shift; //d control point
             if ((commitChangeL) || (commitChangeR)) { //if committed to change lanes
-              if (commitChangeL) {
+              /*if (commitChangeL) {
                 //shift spline to left
                 tempD = lastD - 4.0 * i / projSteps;
                 if (tempD < (targLane * 4 + 2.0)) {
@@ -454,7 +467,24 @@ int main() {
                   tempD = targLane * 4 + 2.0;  //center in lane
                 }
 
+              }*/
+              
+              
+              double timeTemp = (tempS - laneChangeOrigS) / (speed + 5);
+              if (tempS < laneChangeOrigS) {
+                timeTemp = (tempS + maxDistTravel * 2 - laneChangeOrigS) / (speed + 5);
               }
+              if (timeTemp < timeTarg) {
+                //s(t) = a_0 + a_1 * t + a_2 * t**2 + a_3 * t**3 + a_4 * t**4 + a_5 * t**5
+                tempD = 0;
+                for (int jmtCoeff = 0; jmtCoeff < 6; ++jmtCoeff) {
+                  tempD += JMTchange[jmtCoeff] * pow(timeTemp, jmtCoeff);
+                }
+              }
+              else {
+                tempD = targLane * 4.0 + 2.0;
+              }
+              
               
               
             }
@@ -493,7 +523,15 @@ int main() {
             bool coastUp = (-acc_tan >= sqrt(6.0 * abs(speed - ref_speed))); //slowly release brakes
             if (underspeed) {
               if ((!overAcc) && (!coastDown)) {
-                acc_tan = std::min(3.0, acc_tan + ts*7.0); //cap acc at 3 m/s^2, jerk at 7 m/s^3
+                if ((!commitChangeL) && (!commitChangeR)) {
+                  acc_tan = std::min(3.0, acc_tan + ts * 7.0); //cap acc at 3 m/s^2, jerk at 7 m/s^3
+                }
+                else if (acc_tan < 0) {
+                  acc_tan = std::min(3.0, acc_tan + ts * 7.0);
+                }
+                else {
+                  acc_tan = std::max(0.0, acc_tan - ts * 7.0);
+                }
               }
               
               if (overAcc) {
@@ -601,7 +639,7 @@ int main() {
             pos_s = frenetPos[0];
             pos_d = frenetPos[1];
 
-            if ((commitChangeL||commitChangeR)&&(abs(pos_d - targLane * 4 - 2.0) < 0.2)) {
+            if ((commitChangeL||commitChangeR)&&(abs(pos_d - targLane * 4 - 2.0) < 0.1)) {
               commitChangeL = false; //completion of lane change
               commitChangeR = false;
               timer = clock();

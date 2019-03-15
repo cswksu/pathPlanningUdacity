@@ -5,10 +5,14 @@
 #include <string>
 #include <vector>
 #include <numeric>
+#include "Eigen-3.3/Eigen/Core"
+#include "Eigen-3.3/Eigen/QR"
 
 // for convenience
 using std::string;
 using std::vector;
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
 
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
@@ -232,6 +236,56 @@ vector<double> kinematics(vector<double> xPath, vector<double> yPath, double& ts
   }
     
   return { speedVect[len - 2],theta,speedVect[len - 3],acc_tan };
+}
+
+vector<double> JMT(vector<double> &start, vector<double> &end, double T) {
+  /**
+   * Calculate the Jerk Minimizing Trajectory that connects the initial state
+   * to the final state in time T.
+   *
+   * @param start - the vehicles start location given as a length three array
+   *   corresponding to initial values of [s, s_dot, s_double_dot]
+   * @param end - the desired end state for vehicle. Like "start" this is a
+   *   length three array.
+   * @param T - The duration, in seconds, over which this maneuver should occur.
+   *
+   * @output an array of length 6, each value corresponding to a coefficent in
+   *   the polynomial:
+   *   s(t) = a_0 + a_1 * t + a_2 * t**2 + a_3 * t**3 + a_4 * t**4 + a_5 * t**5
+   *
+   * EXAMPLE
+   *   > JMT([0, 10, 0], [10, 10, 0], 1)
+   *     [0.0, 10.0, 0.0, 0.0, 0.0, 0.0]
+   */
+  double startX = start[0];
+  double startXdot = start[1];
+  double startXdot_dot = start[2];
+  double endX = end[0];
+  double endXdot = end[1];
+  double endXdot_dot = end[2];
+
+  double T2 = pow(T, 2);
+  double T3 = pow(T, 3);
+  double T4 = pow(T, 4);
+  double T5 = pow(T, 5);
+
+  MatrixXd A(3, 3);
+  A << T3, T4, T5,
+    3 * T2, 4 * T3, 5 * T4,
+    6 * T, 12 * T2, 20 * T3;
+  //std::cout<<A<<std::endl;
+  double b1 = endX - (startX + startXdot * T + 0.5*startXdot_dot*T2);
+  double b2 = endXdot - (startXdot + startXdot_dot * T);
+  double b3 = endXdot_dot - startXdot_dot;
+
+  VectorXd b(3);
+  b << b1, b2, b3;
+  //std::cout<<b<<std::endl;
+  VectorXd x(3);
+  x = A.colPivHouseholderQr().solve(b);
+  //std::cout<<x<<std::endl;
+
+  return { startX,startXdot,startXdot_dot / 2,x[0],x[1],x[2] };
 }
 
 
