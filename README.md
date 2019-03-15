@@ -1,6 +1,88 @@
 # CarND-Path-Planning-Project
 Self-Driving Car Engineer Nanodegree Program
-   
+
+## Rubric Questions
+
+### Compilation
+
+*The code compiles correctly.*
+
+Yes, the code compiles with CMake. O3 compilation is added to the makefile to increase speed.
+
+### Valid Trajectories
+
+*The car is able to drive at least 4.32 miles without incident*
+
+The code runs for more than 4.32 miles successfully. See below run with 11 mile travelled and 16 minute elapsed time: 
+
+![proof](https://github.com/cswksu/pathPlanningUdacity/blob/master/images/proof.png)
+
+*The car drives according to the speed limit.*
+
+The car's nominal speed is 45 mph. If a simple parameter tweak could bump this higher if needed.
+
+*Max Acceleration and Jerk are not Exceeded.*
+*Car does not have collisions.*
+*The car stays in its lane, except for the time between changing lanes.*
+
+The car meets these criteria, as seen by the counter.
+
+*The car is able to change lanes*
+
+The car changes lanes. As seen in the proof, it ended up in the outside lane, and the car starts in the middle lane. Ergo, lane change.
+
+### Reflection
+
+#### Reception of old trajectory
+
+The code takes in up to the last 15 points from the JSON message, and analyzes the trajectory for last known speed, tangential acceleration, and position. This is done with the overloaded kinematics functions I created in the helpers.cpp file. It was my experience that the process of sending a trajectory to the simulator and then receiving it back introduced a lot of noise, as the simulator converts all points to floats. As such, unacceptably high errors were introduced into my backwards finite difference calculations for acceleration, even when averaging or using up to 6th order finite difference functions. As such, the code retains its last trajectory as a double, and matches the last point in the trajectory to its corresponding tangential acceleration. 
+
+#### Unpacking of sensor fusion
+
+The code analzyes the sensor fusion package received from the perfect sensors and distills it into the following information:
+
+* Lane 1 Ahead
+* Lane 2 Ahead
+* Lane 3 Ahead
+* Lane 1 Behind
+* Lane 2 Behind
+* Lane 3 Behind
+
+For each of these positions, distance, speed, and Time to Collision were calculated. The car ahead of the host/ego vehicle was also identified.
+
+#### Lane change feasibility
+
+Based on the host's lane, it checks other lanes for feasibility, checking the following:
+
+* time since last lane change
+* presence of curve ahead
+* host tangential acceleration
+* distance to vehicles in left lane
+* relative speed of vehicle in host lane to vehicle in potential lane
+* host speed
+
+If any criteria are unsatisfactory, the host determines that the lane change is infeasible. If feasible, the host begins its execution of the lane change and commits to it, so as to be decisive.
+
+#### Spline generation
+
+The code then generates a spline with roughly 2 seconds of planned path. Assuming no lane change, the code generates a spline along the center of the lane. If a lane change is occuring, the spline is drawn that its end point is in the center of the target lane. Currently, 5 points are generated for the spline.
+
+#### Transformation
+
+To minimize the risk of having a function that generates two Ys for any given X, the spline is then rotated so that its end point is along the x-axis. Helper functions for rotation are present in the helpers.cpp file.
+
+#### Speed control
+
+A controller is created to manage speed while maintiaining jerk and acceleration criteria. The controller directly controls acceleration, incrementing based on speed and acceleration to maintain 45 mph, or the speed of the vehicle ahead. You could classify the speed controller as a finite state machine, with states throttle, brake, release throttle, and release brake. Release states move the vehicle towards 0 tangential acceleration, while brake and throttle increase the negative and positive acceleration, respectively.
+
+An iterative process is then used to pick a point along the spline that produces an adequate speed. Once a proposed point is selected that provides a speed within 0.03 m/s of the chosen speed, the point is chosen. A correction factor is applied to the point to ensure speed chosen matches more exactly.
+
+As all of this math is happening in the transformed coordinate space, a transformation occurs after each point is generated. Next, the kinematics of the trajectory are calculated. Finally, the transformed path is passed to the JSON file, and the process begins again.
+
+#### Acknowledgements
+
+I would also like to give some kudos to the VCPKG project and [this Codza blog](http://www.codza.com/blog/udacity-uws-in-visualstudio) for instructions on how to get the project running on Windows and Visual Studio. If anyone at Udacity is reading this, it would make life much easier for Windows users to have this information linked.
+
 ### Simulator.
 You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2).  
 
