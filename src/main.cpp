@@ -43,7 +43,7 @@ int main() {
   int targLane = 1; //target lane (0, 1 , 2)
   bool commitChangeL = false; //persistent vectors for committing to lane change
   bool commitChangeR = false;
-  double laneChangeOrigS;
+  double laneChangeOrigS; //persistent JMT info
   vector<double> JMTchange;
   
 
@@ -388,6 +388,7 @@ int main() {
               targLane=lane-1; //lane change
               laneChangeOrigS = pos_s;
               commitChangeL = true; //commit to left lane change
+              //calculate Jerk Minimizing Trajectory
               vector<double>startVector = { pos_d, 0.0, 0.0 };
               vector<double>endVector = { targLane*4.0 + 2.0, 0, 0 };
               
@@ -400,6 +401,7 @@ int main() {
               targLane=lane+1; //lane change
               laneChangeOrigS = pos_s;
               commitChangeR = true; //commit to change
+              //calculate Jerk Minimizing Trajectory
               vector<double>startVector = { pos_d, 0.0, 0.0 };
               vector<double>endVector = { targLane*4.0 + 2.0, 0, 0 };
               
@@ -453,35 +455,20 @@ int main() {
             double deltaS = tempS - lastS;
             double tempD = pos_d + shift; //d control point
             if ((commitChangeL) || (commitChangeR)) { //if committed to change lanes
-              /*if (commitChangeL) {
-                //shift spline to left
-                tempD = lastD - 4.0 * i / projSteps;
-                if (tempD < (targLane * 4 + 2.0)) {
-                  tempD = targLane * 4 + 2.0;  //center in lane
-                }
-              }
-              else {
-                //shift spline to right
-                tempD = lastD + 4.0 * i / projSteps;
-                if (tempD > (targLane * 4 + 2.0)) {
-                  tempD = targLane * 4 + 2.0;  //center in lane
-                }
-
-              }*/
-              
-              
+              //generate time for Jerk Minimizing Trajectory
               double timeTemp = (tempS - laneChangeOrigS) / (speed + 5);
               if (tempS < laneChangeOrigS) {
+                //if car performs lane change near s=0
                 timeTemp = (tempS + maxDistTravel * 2 - laneChangeOrigS) / (speed + 5);
               }
               if (timeTemp < timeTarg) {
-                //s(t) = a_0 + a_1 * t + a_2 * t**2 + a_3 * t**3 + a_4 * t**4 + a_5 * t**5
+                //calculate JMT for frenet d
                 tempD = 0;
                 for (int jmtCoeff = 0; jmtCoeff < 6; ++jmtCoeff) {
                   tempD += JMTchange[jmtCoeff] * pow(timeTemp, jmtCoeff);
                 }
               }
-              else {
+              else { //after completion of JMT
                 tempD = targLane * 4.0 + 2.0;
               }
               
@@ -526,10 +513,10 @@ int main() {
                 if ((!commitChangeL) && (!commitChangeR)) {
                   acc_tan = std::min(3.0, acc_tan + ts * 7.0); //cap acc at 3 m/s^2, jerk at 7 m/s^3
                 }
-                else if (acc_tan < 0) {
+                else if (acc_tan < 0) {  //reduce acceleration during lane change
                   acc_tan = std::min(3.0, acc_tan + ts * 7.0);
                 }
-                else {
+                else { //coast during lane changes
                   acc_tan = std::max(0.0, acc_tan - ts * 7.0);
                 }
               }
