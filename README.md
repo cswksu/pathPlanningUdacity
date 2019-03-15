@@ -13,7 +13,7 @@ Yes, the code compiles with CMake. O3 compilation is added to the makefile to in
 
 *The car is able to drive at least 4.32 miles without incident*
 
-The code runs for more than 4.32 miles successfully. See below run with 11 mile travelled and 16 minute elapsed time: 
+The code runs for more than 4.32 miles successfully. See below run with 3 laps completed without issue: 
 
 ![proof](https://github.com/cswksu/pathPlanningUdacity/blob/master/images/proof.png)
 
@@ -22,7 +22,9 @@ The code runs for more than 4.32 miles successfully. See below run with 11 mile 
 The car's nominal speed is 45 mph. If a simple parameter tweak could bump this higher if needed.
 
 *Max Acceleration and Jerk are not Exceeded.*
+
 *Car does not have collisions.*
+
 *The car stays in its lane, except for the time between changing lanes.*
 
 The car meets these criteria, as seen by the counter.
@@ -65,7 +67,7 @@ If any criteria are unsatisfactory, the host determines that the lane change is 
 
 #### Spline generation
 
-The code then generates a spline with roughly 2 seconds of planned path. Assuming no lane change, the code generates a spline along the center of the lane. If a lane change is occuring, the spline is drawn that its end point is in the center of the target lane. Currently, 5 points are generated for the spline.
+The code then generates a spline with roughly 2 seconds of planned path. Assuming no lane change, the code generates a spline along the center of the lane. If a lane change is occuring, the spline is drawn that its end point is in the center of the target lane using a Jerk Minimizing Trajectory (code in helper file). Currently, 5 points are generated for the spline.
 
 #### Transformation
 
