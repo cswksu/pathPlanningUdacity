@@ -65,7 +65,7 @@ If any criteria are unsatisfactory, the host determines that the lane change is 
 
 #### Spline generation
 
-The code then generates a spline with roughly 2 seconds of planned path. Assuming no lane change, the code generates a spline along the center of the lane. If a lane change is occuring, the spline is drawn that its end point is in the center of the target lane. Currently, 5 points are generated for the spline.
+The code then generates a spline with roughly 2 seconds of planned path. Assuming no lane change, the code generates a spline along the center of the lane. If a lane change is occuring, the spline is drawn that its end point is in the center of the target lane using a Jerk Minimizing Trajectory (code in helper file). Currently, 5 points are generated for the spline.
 
 #### Transformation
 
